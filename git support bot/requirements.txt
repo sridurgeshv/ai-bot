@@ -1,0 +1,7 @@
+flask
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+pandas
+scikit-learn
+faiss-cpu  # Or faiss-gpu if you have a suitable GPU

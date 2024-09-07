@@ -1,0 +1,21 @@
+Software,Category,Common Issue,Solution,Source
+Git,Installation Issues,Missing Git command after installation,Ensure that Git is added to your system PATH during installation.,https://stackoverflow.com/questions/29565779/cannot-find-command-git-windows
+Git,Installation Issues,Installation fails on Windows,Run installer as administrator,https://git-scm.com/download/win
+Git,Installation Issues,Unable to install Git on macOS,Use Homebrew: `brew install git` or download from the official site.,https://git-scm.com/download/mac
+Git,Installation Issues,Git installation hangs or freezes,Disable antivirus temporarily during installation.,https://stackoverflow.com/questions/62666958/windows-installer-hangs-during-installing-git
+Git,Installation Issues,"Error: ""Not a git repository"" after install",Ensure you are in a directory initialized as a Git repository.,https://shorturl.at/miS7s
+Git,Configuration Issues,Ignoring changes to a tracked file,Git doesn't provide a direct way; consider using template files,https://git-scm.com/docs/gitfaq
+Git,Configuration Issues,Changing saved password or token in credential manager,Use `git credential reject` to erase existing credentials,https://git-scm.com/docs/gitfaq
+Git,Configuration Issues,Using multiple accounts with the same hosting provider (HTTP),Use different usernames in the URL for each account,https://git-scm.com/docs/gitfaq
+Git,Configuration Issues,Files still tracked after being added to .gitignore,Use `git rm --cached <file/pattern>` to untrack files,https://git-scm.com/docs/gitfaq
+Git,Configuration Issues,Recommended way to store files in Git,"Use UTF-8 encoding without BOM, LF line endings, and set appropriate gitattributes",https://git-scm.com/docs/gitfaq
+Git,Runtime Errors,Merge conflicts not resolving,Use `git merge --abort` to resolve conflicts or manually edit the conflicting files.,https://git-scm.com/docs/git-merge
+Git,Runtime Errors,Syncing a working tree across systems,"Use `rsync` with caution, or prefer normal push/pull mechanisms",https://git-scm.com/docs/gitfaq
+Git,Runtime Errors,Changing the last commit,Use `git commit --amend`,https://git-scm.com/docs/gitfaq
+Git,Runtime Errors,Undoing a change in the main branch,Use `git revert`,https://git-scm.com/docs/gitfaq
+Git,Runtime Errors,Unexpected results when merging branches with reverted changes,Consider using rebase instead of merge in specific scenarios,https://git-scm.com/docs/gitfaq
+Git,Compatibility issues,Text files detected as binary on Windows,Specify a working tree encoding using gitattributes,https://git-scm.com/docs/gitfaq
+Git,Compatibility issues,Files showing ^M at line endings on Windows,Set `core.eol` to native and configure files as text or binary,https://git-scm.com/docs/gitfaq
+Git,Compatibility issues,File always showing as modified,Could be due to case-insensitive file systems; remove one of the conflicting files,https://git-scm.com/docs/gitfaq
+Git,Compatibility issues,Git version not compatible with other tools,Update Git to the latest version to ensure compatibility with other tools.,https://git-scm.com/downloads
+Git,Compatibility issues,SSH keys not recognized with certain servers,Verify that the SSH keys are correctly configured and added to the SSH agent.,https://shorturl.at/MlWyH
