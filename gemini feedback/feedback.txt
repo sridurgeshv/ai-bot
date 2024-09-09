@@ -1,0 +1,5 @@
+Query: i am having issue with apache
+Response: The provided context focuses on Git, a version control system.  Apache issues are not covered in this context. To assist you, please provide more details about the specific Apache issue you're experiencing. 
+
+Feedback: Positive
+
