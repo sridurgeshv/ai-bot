@@ -3,3 +3,8 @@ Response: The provided context focuses on Git, a version control system.  Apache
 
 Feedback: Positive
 
+Query: having conflict with merging and explain me like I'm 5 years old
+Response: Imagine you and your friend are drawing on the same coloring book. You both colored the same tree, but you used green and your friend used brown!  A merge conflict is like that - Git doesn't know which color is right, so it asks you to pick the right one before saving the picture. 
+
+Feedback: Positive
+
