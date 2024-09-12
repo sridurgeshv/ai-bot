@@ -1,0 +1,85 @@
+.sign-in-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-image: url("../assets/bg.jpg");
+    background-size: cover; /* Optional: cover the entire container */
+    background-position: center; /* Optional: center the image */
+    font-family: Arial, sans-serif;
+  }
+  
+  .sign-in-content {
+    background-color: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+  }
+  
+  h2 {
+    color: white;
+    font-size: 25px;
+    margin-bottom: 20px;
+  }
+  
+  p {
+    color: grey;
+    margin-bottom: 15px;
+  }
+  
+  button {
+    background-color: #4285F4;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+  }
+  
+  button:hover {
+    background-color: #3367D6;
+  }
+
+  .signin-button {
+    color: black;
+    background-color: white;
+    border: 1px solid black;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+  }
+  
+  .signin-button:hover {
+    background-color: black;
+    color: white;
+  }
+
+  a {
+    color: #4285F4;
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+
+  .api-input {
+    padding: 10px;
+    width: 40vw;
+    height: 3vh;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: none; /* Prevent resizing */
+    background-color: #333; /* Dark background for textarea */
+    color: white; /* Text color */
+    margin-bottom: 15px;
+    font-size: 16px;
+}

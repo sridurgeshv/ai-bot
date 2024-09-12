@@ -9,3 +9,6 @@ langchain_chroma
 langchainhub
 pypdf
 rapidocr-onnxruntime
+fastapi
+uvicorn 
+google-auth-oauthlib

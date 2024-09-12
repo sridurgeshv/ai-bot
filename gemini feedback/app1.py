@@ -25,7 +25,7 @@ vectorstore = Chroma.from_documents(documents=docs, embedding=GoogleGenerativeAI
 retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10})
 
 # Initialize language model
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0, max_tokens=None, timeout=None)
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0, max_tokens=None, timeout=None)
 
 # Define prompt template
 system_prompt = (
