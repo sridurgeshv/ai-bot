@@ -1,11 +1,17 @@
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_chroma import Chroma
 from dotenv import load_dotenv
 import os
 
@@ -21,6 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Google OAuth2 Setup
 current_dir = os.path.dirname(os.path.abspath(__file__))
 client_secret_path = os.path.join(current_dir, 'client_secret.json')
 
@@ -64,14 +71,51 @@ class ChatRequest(BaseModel):
     apiKey: str
     question: str
 
+# PDF and Document Retrieval Setup
+loader = PyPDFLoader("final pdf.pdf")  # Replace with your actual PDF file
+data = loader.load()
+
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000)
+docs = text_splitter.split_documents(data)
+
+# Create vector store and retriever
+vectorstore = Chroma.from_documents(documents=docs, embedding=GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
+retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10})
+
+system_prompt = (
+    "You are a technical support assistant specializing in diagnosing and resolving issues related to widely-used open-source software."
+    "Use the following pieces of retrieved context to provide solutions or guidance to the user. "
+    "If you don't know the answer based on the provided context, say that the issue is not in the context. "
+    "Keep your answers concise."
+    "\n\n"
+    "{context}"
+)
+
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system_prompt),
+        ("human", "{input}"),
+    ]
+)
+
 @app.post("/chat")
 def chat_with_model(request: ChatRequest):
     try:
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=request.apiKey)
-        response = llm.invoke(request.question)
-        # Extract the text content from the response
-        answer_text = response.content if hasattr(response, 'content') else str(response)
-        return {"answer": answer_text}
+        # Initialize the language model with the API key from the request
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=request.apiKey, temperature=0, max_tokens=None, timeout=None)
+        
+        question_answer_chain = create_stuff_documents_chain(llm, prompt)
+        rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+        
+        response = rag_chain.invoke({"input": request.question})
+        answer = response["answer"]
+
+        # Check if the answer is based on context
+        if "not in the context" in answer.lower():
+            return {"answer": answer, "contextual": False}
+        else:
+            return {"answer": answer, "contextual": True}
+
     except Exception as e:
         print(f"Error in chat_with_model: {str(e)}")  # Detailed logging
         raise HTTPException(status_code=500, detail=str(e))

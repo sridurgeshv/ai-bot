@@ -41,8 +41,13 @@ const ChatPage = () => {
   };
 
   const formatBotResponse = (response) => {
-    const paragraphs = response.replace(/\*/g, '').split('\n\n');
-    return paragraphs.map(para => 
+    const formattedResponse = response
+      .replace(/```(\w+)?\n([\s\S]+?)```/g, (_, lang, code) => `<code>${code.trim()}</code>`)
+      .replace(/^###\s(.+)$/gm, '<h3>$1</h3>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  
+    const paragraphs = formattedResponse.split('\n\n');
+    return paragraphs.map(para =>
       para.startsWith('- ') ? `<ul><li>${para.substring(2)}</li></ul>` : `<p>${para}</p>`
     ).join('');
   };
