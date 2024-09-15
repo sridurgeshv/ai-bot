@@ -28,8 +28,8 @@
 }
   
   .sign-out-icon {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     cursor: pointer;
   }
   
@@ -190,8 +190,8 @@
     cursor: pointer;
     padding: 10px;
     position: absolute;
-    left: 13%;
-    top: 10%;
+    left: 14%;
+    top: 11%;
     transition: color 0.3s;
   }
   
@@ -203,7 +203,7 @@
   .sidebar-closed {
     position: absolute;
     left: 0;
-    top: 10.2%;
+    top: 11%;
     transform: translateY(-50%);
     background-color: #36393f;
     border-radius: 0 4px 4px 0;

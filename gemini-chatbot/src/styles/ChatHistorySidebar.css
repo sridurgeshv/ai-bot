@@ -6,8 +6,9 @@
   }
   
   .chat-history-sidebar h2 {
-    font-size: 16px;
+    font-size: 20px;
     margin-bottom: 25px;
+    margin-left: 10px;
     color: #b9bbbe;
   }
   
