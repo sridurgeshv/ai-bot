@@ -203,7 +203,7 @@
   .sidebar-closed {
     position: absolute;
     left: 0;
-    top: 10%;
+    top: 10.2%;
     transform: translateY(-50%);
     background-color: #36393f;
     border-radius: 0 4px 4px 0;
