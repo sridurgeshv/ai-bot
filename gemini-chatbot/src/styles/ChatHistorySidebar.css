@@ -1,0 +1,59 @@
+.chat-history-sidebar {
+    height: 100%;
+    overflow-y: auto;
+    background-color: #36393f;
+    padding: 15px 10px;
+  }
+  
+  .chat-history-sidebar h2 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #b9bbbe;
+  }
+  
+  .chat-history-item {
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #2f3136;
+    cursor: pointer;
+  }
+  
+  .issue-title {
+    font-weight: bold;
+    color: #b9bbbe;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  .issue-title:hover {
+    color: #ffffff;
+  }
+  
+  .chat-details {
+    margin-top: 5px;
+  }
+  
+  .user-message,
+  .bot-response {
+    margin: 5px 0;
+    color: #b9bbbe;
+  }
+  
+  strong {
+    color: #ffffff;
+  }
+  
+  ul {
+    padding-left: 20px;
+  }
+  
+  li {
+    list-style: disc;
+  }
+  
+  .chat-history-item:hover {
+    background-color: #4f545c;
+  }
