@@ -22,13 +22,14 @@
   
   h2 {
     color: white;
-    font-size: 25px;
+    font-size: 32px;
     margin-bottom: 20px;
   }
   
   p {
-    color: grey;
+    color: white;
     margin-bottom: 15px;
+    font-weight: bold;
   }
   
   button {

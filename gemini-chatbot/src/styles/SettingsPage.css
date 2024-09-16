@@ -1,0 +1,59 @@
+.settings-container {
+  padding: 40px;
+  border-radius: 12px; /* Slightly more rounded corners */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Deeper shadow for depth */
+  background-color: #ffffff; /* White background for the container */
+  max-width: 500px; /* Slightly wider for better content fit */
+  width: 100%; /* Responsive width */
+  margin: auto; /* Center the container */
+  text-align: center; /* Center text within the container */
+  position: relative; /* Position for the close button */
+}
+
+.close-button {
+  position: absolute; /* Position it in the top-right corner */
+  top: 20px; /* Space from the top */
+  right: 20px; /* Space from the right */
+  background: none; /* No background */
+  border: none; /* No border */
+  font-size: 24px; /* Size of the close icon */
+  color: #333; /* Color of the close icon */
+  cursor: pointer; /* Pointer cursor on hover */
+  transition: color 0.3s; /* Smooth color transition */
+}
+
+.close-button:hover {
+  color: #ff0000; /* Change color on hover */
+}
+
+.settings-container h2 {
+  color: #333; /* Darker text color */
+  font-weight: bold;
+  font-size: 28px; /* Increase font size for prominence */
+  margin-bottom: 30px; /* More space below the heading */
+}
+
+.settings-container ul {
+  list-style: none;
+  padding: 0; /* Remove default padding */
+}
+
+.settings-container li {
+  cursor: pointer;
+  padding: 15px 0; /* Increase padding for better click area */
+  font-size: 20px; /* Slightly larger font size */
+  color: #007BFF; /* Blue text color */
+  list-style: none;
+  transition: color 0.3s, background-color 0.3s; /* Smooth transition for hover effects */
+  border-bottom: 1px solid #e0e0e0; /* Separator between items */
+}
+
+.settings-container li:last-child {
+  border-bottom: none; /* Remove border from last item */
+}
+
+.settings-container li:hover {
+  color: #fff; /* Change text color on hover */
+  background-color: #007BFF; /* Add background color on hover */
+  border-radius: 4px; /* Round the corners on hover */
+}

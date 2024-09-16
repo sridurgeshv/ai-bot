@@ -87,8 +87,9 @@ const handleCopy = (text) => {
     navigate('/');
   };
 
+  // Update handleSettings function in ChatPage.js
   const handleSettings = () => {
-    console.log("Settings clicked");
+    navigate('/settings');
   };
 
   const toggleSidebar = () => {
