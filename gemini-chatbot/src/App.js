@@ -4,7 +4,8 @@ import SignInPage from "./components/SignInPage";
 import ChatPage from "./components/ChatPage";
 import SettingsPage from './components/SettingsPage';
 import ProfilePage from './components/ProfilePage';
-import SupportPage from "./components/SupportPage"; // Import the new component
+import SupportPage from "./components/SupportPage"; 
+import EscalationForm from "./components/EscalationForm"; 
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <Routes>
         <Route path="/" element={<SignInPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/escalate" element={<EscalationForm />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/help" element={<SupportPage />} /> 

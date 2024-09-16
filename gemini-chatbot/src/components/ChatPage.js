@@ -12,6 +12,8 @@ const ChatPage = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [feedbackStates, setFeedbackStates] = useState({});
+  const [showEscalationPrompt, setShowEscalationPrompt] = useState(false);
   const navigate = useNavigate();
 
   const googleApiKey = sessionStorage.getItem("googleApiKey");
@@ -35,9 +37,28 @@ const handleReadAloud = (text) => {
   }
 };
 
-const handleFeedback = (messageIndex, isPositive) => {
-  // Implement feedback logic here
-  console.log(`Feedback for message ${messageIndex}: ${isPositive ? 'positive' : 'negative'}`);
+const handleFeedback = async (messageIndex, isPositive) => {
+  const feedback = isPositive ? 'Positive' : 'Negative';
+  const userMessage = chatHistory[messageIndex - 1].message;
+  const botResponse = chatHistory[messageIndex].message;
+
+  try {
+    await axios.post("http://localhost:8000/feedback", {
+      query: userMessage,
+      response: botResponse,
+      feedback: feedback
+    });
+
+  // Update feedback state
+  setFeedbackStates(prev => ({
+    ...prev,
+    [messageIndex]: isPositive ? 'positive' : 'negative'
+  }));
+
+  console.log(`Feedback for message ${messageIndex}: ${feedback}`);
+} catch (error) {
+  console.error("Error saving feedback:", error);
+}
 };
 
 const handleCopy = (text) => {
@@ -58,15 +79,33 @@ const handleCopy = (text) => {
         apiKey: googleApiKey,
         question: query
       });
-      const botResponse = formatBotResponse(res.data.answer);
-      setChatHistory(prev => [...prev, { type: 'bot', message: botResponse }]);
-      // speakResponse(res.data.answer);
+      if (!res.data.contextual) {
+        // Bot couldn't find a relevant answer
+        const botResponse = formatBotResponse(res.data.answer);
+        setChatHistory(prev => [...prev, { type: 'bot', message: botResponse }]);
+        setShowEscalationPrompt(true);
+      } else {
+        // Bot found an answer
+        const botResponse = formatBotResponse(res.data.answer);
+        setChatHistory(prev => [...prev, { type: 'bot', message: botResponse }]);
+        setShowEscalationPrompt(false);
+      }
     } catch (error) {
       console.error("Error fetching chatbot response:", error);
       setChatHistory(prev => [...prev, { type: 'error', message: "Sorry, I couldn't process your request." }]);
     } finally {
       setIsLoading(false);
       setQuery("");
+    }
+  };
+
+  const handleEscalation = (escalate) => {
+    if (escalate) {
+      // Redirect to escalation form page
+      navigate('/escalate');
+    } else {
+      // Hide the Yes/No buttons
+      setShowEscalationPrompt(false);
     }
   };
 
@@ -154,18 +193,24 @@ const handleCopy = (text) => {
                    >
                      <Volume2 size={16} />
                    </button>
-                   <button 
-                     onClick={() => handleFeedback(index, true)}
-                     title="Good response"
-                   >
-                     <ThumbsUp size={16} />
-                   </button>
-                   <button 
-                     onClick={() => handleFeedback(index, false)}
-                     title="Bad response"
-                   >
-                     <ThumbsDown size={16} />
-                   </button>
+                   {feedbackStates[index] !== 'negative' && (
+                        <button 
+                          onClick={() => handleFeedback(index, true)}
+                          title="Good response"
+                          className={feedbackStates[index] === 'positive' ? 'selected' : ''}
+                        >
+                          <ThumbsUp size={16} />
+                        </button>
+                      )}
+                      {feedbackStates[index] !== 'positive' && (
+                        <button 
+                          onClick={() => handleFeedback(index, false)}
+                          title="Bad response"
+                          className={feedbackStates[index] === 'negative' ? 'selected' : ''}
+                        >
+                          <ThumbsDown size={16} />
+                        </button>
+                      )}
                    <button 
                      onClick={() => handleCopy(chat.message)}
                      title="Copy message"
@@ -180,6 +225,15 @@ const handleCopy = (text) => {
               </div>
             ))}
             {isLoading && <div className="chat-message bot"><strong>Bot:</strong> Thinking...</div>}
+          
+            {/* Show Escalation prompt when needed */}
+            {showEscalationPrompt && (
+              <div className="escalation-prompt">
+                <p>Would you like to raise this issue for further assistance?</p>
+                <button onClick={() => handleEscalation(true)}>Yes</button>
+                <button onClick={() => handleEscalation(false)}>No</button>
+              </div>
+            )}
           </div>
           <div className="chat-input">
             <textarea

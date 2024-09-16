@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from fastapi.responses import RedirectResponse, JSONResponse
@@ -14,10 +14,21 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_chroma import Chroma
 from dotenv import load_dotenv
 import os
+from sqlalchemy.orm import Session
+from models import Escalation
+from database import SessionLocal, engine
 
 load_dotenv()
 
 app = FastAPI()
+
+# Dependency to get the database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 app.add_middleware(
     CORSMiddleware,
@@ -99,7 +110,7 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 @app.post("/chat")
-def chat_with_model(request: ChatRequest):
+async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
     try:
         # Initialize the language model with the API key from the request
         llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=request.apiKey, temperature=0, max_tokens=None, timeout=None)
@@ -110,12 +121,57 @@ def chat_with_model(request: ChatRequest):
         response = rag_chain.invoke({"input": request.question})
         answer = response["answer"]
 
-        # Check if the answer is based on context
-        if "not in the context" in answer.lower():
-            return {"answer": answer, "contextual": False}
-        else:
-            return {"answer": answer, "contextual": True}
+        # Check if the answer indicates the context doesn't cover the issue
+        if "the provided context doesn't contain information about" in answer.lower():
+            # Escalate the issue to human support using the internal `/escalate` endpoint
+            escalation_result = await escalate_to_human_support(
+            EscalateRequest(question=request.question), db
+            )
 
+            return {
+                "answer": answer,
+                "contextual": False,
+                "message": "The current context doesn't cover this issue. Your query has been escalated to human support.",
+                "escalation": escalation_result
+            }
+        else:
+            # Return the response if the answer is based on context
+            return {"answer": answer, "contextual": True}
+    
     except Exception as e:
-        print(f"Error in chat_with_model: {str(e)}")  # Detailed logging
+        print(f"Error in chat_with_model: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# POST /escalate route that saves the escalation request in the database
+class EscalateRequest(BaseModel):
+    question: str
+    
+@app.post("/escalate")
+async def escalate_to_human_support(request: EscalateRequest, db: Session = Depends(get_db)):
+    try:
+        # Create a new escalation record in the database
+        new_escalation = Escalation(question=request.question)
+        db.add(new_escalation)
+        db.commit()
+        
+        # Simulate a successful escalation response
+        return {"status": "escalated", "message": "The issue has been escalated to human support."}
+    
+    except Exception as e:
+        print(f"Error in escalate_to_human_support: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class FeedbackRequest(BaseModel):
+    query: str
+    response: str
+    feedback: str
+
+@app.post("/feedback")
+async def save_feedback(request: FeedbackRequest):
+    try:
+        with open("feedback.txt", "a") as f:
+            f.write(f"Query: {request.query}\nResponse: {request.response}\nFeedback: {request.feedback}\n\n")
+        return {"status": "success", "message": "Feedback saved successfully"}
+    except Exception as e:
+        print(f"Error saving feedback: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

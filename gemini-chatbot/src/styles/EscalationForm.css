@@ -1,0 +1,111 @@
+.escalate-form-container {
+    max-width: 600px;
+    width: 90%;
+    margin: 2rem auto;
+    padding: 2rem;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+  }
+  
+  .escalate-form-container h1 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .escalate-form-container form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .escalate-form-container label {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  
+  .escalate-form-container textarea {
+    resize: vertical;
+    width: 94%;
+    min-height: 150px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  
+  .escalate-form-container textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+  
+  .escalate-form-container button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    width: 25%;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .escalate-form-container button:hover {
+    background-color: #0056b3;
+  }
+  
+  .escalate-form-container button:active {
+    transform: translateY(1px);
+  }
+  
+  .escalate-form-container p {
+    margin-top: 1rem;
+    font-size: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+  }
+  
+  .escalate-form-container p.green {
+    color: #28a745;
+    background-color: #e8f5e9;
+  }
+  
+  .escalate-form-container p.red {
+    color: #dc3545;
+    background-color: #fbeaea;
+  }
+  
+  .message-container {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  .message-container p.msg {
+    color: rgb(51, 176, 51);
+    margin: 5px 0;
+  }
+
+  @media (max-width: 768px) {
+    .escalate-form-container {
+      width: 95%;
+      padding: 1.5rem;
+    }
+  
+    .escalate-form-container h1 {
+      font-size: 1.5rem;
+    }
+  
+    .escalate-form-container button {
+      width: 100%;
+    }
+  }

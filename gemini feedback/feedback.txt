@@ -8,3 +8,8 @@ Response: Imagine you and your friend are drawing on the same coloring book. You
 
 Feedback: Positive
 
+Query: CORS issue in git
+Response: <p class="bot-paragraph">The issue is not in the context. 
+</p>
+Feedback: Positive
+
