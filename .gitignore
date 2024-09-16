@@ -4,3 +4,7 @@
 requirements.txt
 venv/
 
+# Ignore node_modules
+/node_modules/
+/gemini feedback/node_modules/
+/gemini-chatbot/node_modules/

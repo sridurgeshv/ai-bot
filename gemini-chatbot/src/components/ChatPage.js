@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import ChatHistorySidebar from './ChatHistorySidebar';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Volume2, ThumbsUp, ThumbsDown, Copy } from 'lucide-react';
 import '../styles/ChatPage.css';
 
 const ChatPage = () => {
@@ -11,6 +11,7 @@ const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const navigate = useNavigate();
 
   const googleApiKey = sessionStorage.getItem("googleApiKey");
@@ -22,9 +23,28 @@ const ChatPage = () => {
   }, [googleApiKey, navigate]);
 
 // Handle text-to-speech for the bot response
-const speakResponse = (responseText) => {
-  const utterance = new SpeechSynthesisUtterance(responseText);
-  window.speechSynthesis.speak(utterance);
+const handleReadAloud = (text) => {
+  if (isSpeaking) {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  } else {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+  }
+};
+
+const handleFeedback = (messageIndex, isPositive) => {
+  // Implement feedback logic here
+  console.log(`Feedback for message ${messageIndex}: ${isPositive ? 'positive' : 'negative'}`);
+};
+
+const handleCopy = (text) => {
+  navigator.clipboard.writeText(text).then(() => {
+    // Optionally, show a "Copied!" message
+    console.log("Text copied to clipboard");
+  });
 };
 
   const handleQuerySubmit = async () => {
@@ -40,7 +60,7 @@ const speakResponse = (responseText) => {
       });
       const botResponse = formatBotResponse(res.data.answer);
       setChatHistory(prev => [...prev, { type: 'bot', message: botResponse }]);
-      speakResponse(res.data.answer);
+      // speakResponse(res.data.answer);
     } catch (error) {
       console.error("Error fetching chatbot response:", error);
       setChatHistory(prev => [...prev, { type: 'error', message: "Sorry, I couldn't process your request." }]);
@@ -114,7 +134,35 @@ const speakResponse = (responseText) => {
               <div key={index} className={`chat-message ${chat.type}`}>
                 <strong>{chat.type === 'user' ? 'You: ' : 'Bot: '}</strong>
                 {chat.type === 'bot' ? (
-                  <div dangerouslySetInnerHTML={{ __html: chat.message }} />
+                 <>
+                 <div dangerouslySetInnerHTML={{ __html: chat.message }} />
+                 <div className="message-actions">
+                   <button 
+                     onClick={() => handleReadAloud(chat.message)}
+                     title={isSpeaking ? "Stop Reading" : "Read Aloud"}
+                   >
+                     <Volume2 size={16} />
+                   </button>
+                   <button 
+                     onClick={() => handleFeedback(index, true)}
+                     title="Good response"
+                   >
+                     <ThumbsUp size={16} />
+                   </button>
+                   <button 
+                     onClick={() => handleFeedback(index, false)}
+                     title="Bad response"
+                   >
+                     <ThumbsDown size={16} />
+                   </button>
+                   <button 
+                     onClick={() => handleCopy(chat.message)}
+                     title="Copy message"
+                   >
+                     <Copy size={16} />
+                   </button>
+                 </div>
+               </>
                 ) : (
                   chat.message
                 )}
