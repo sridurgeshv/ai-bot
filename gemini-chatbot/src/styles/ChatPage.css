@@ -100,6 +100,7 @@
     word-wrap: break-word;
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     position: relative;
+    font-weight: normal;
   }
   
   .message-actions {
@@ -146,6 +147,56 @@
     color: #dcddde;
   }
   
+  .bot-message-content {
+    font-weight: normal;
+  }
+
+  .bot-header {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 10px;
+  }
+  
+  .bot-paragraph {
+    margin-bottom: 10px;
+  }
+
+  .bot-list {
+    list-style-type: none;
+    padding-left: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .bot-list-item {
+    position: relative;
+    margin-bottom: 5px;
+    padding-left: 15px;
+  }
+  
+  .bot-list-item::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #ffffff;
+  }
+  
+  .bot-code {
+    display: block;
+    background-color: #2f3136;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px 0;
+    font-family: 'Consolas', 'Courier New', monospace;
+    white-space: pre-wrap;
+    color: #e6e6e6;
+    font-size: 0.9em;
+  }
+  
+  .user-message-content {
+    font-weight: normal;
+  }
+
   .chat-message code {
     display: block;
     background-color: #2f3136;
@@ -154,6 +205,8 @@
     margin: 10px 0;
     font-family: 'Consolas', 'Courier New', monospace;
     white-space: pre-wrap;
+    color: #e6e6e6;
+    font-size: 0.9em;
   }
   
   .chat-message.error {
@@ -162,17 +215,23 @@
 }
 
 .chat-message strong {
-  font-weight: 600;
-  margin-right: 5px;
+  color: #ffffff;
 }
   
-  .chat-message h3 {
-    margin-top: 0;
-    color: #4285F4;
-  }
+.chat-message p {
+  margin-bottom: 10px;
+}
 
-  .chat-message ul, .chat-message ol {
+.chat-message h3 {
+  margin-top: 15px;
+  margin-bottom: 10px;
+  color: #ffffff;
+  font-size: 1.1em;
+}
+
+  .chat-message ol, .chat-message ul {
     padding-left: 20px;
+    margin-bottom: 10px;
   }
   
   .chat-message li {

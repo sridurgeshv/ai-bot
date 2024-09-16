@@ -4,6 +4,7 @@ import SignInPage from "./components/SignInPage";
 import ChatPage from "./components/ChatPage";
 import SettingsPage from './components/SettingsPage';
 import ProfilePage from './components/ProfilePage';
+import SupportPage from "./components/SupportPage"; // Import the new component
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/help" element={<SupportPage />} /> 
       </Routes>
     </Router>
   );

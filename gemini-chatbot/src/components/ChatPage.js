@@ -72,15 +72,23 @@ const handleCopy = (text) => {
 
   const formatBotResponse = (response) => {
     const formattedResponse = response
-    .replace(/```(\w+)?\n([\s\S]+?)```/g, (_, lang, code) => `<code>${code.trim()}</code>`)
-    .replace(/^###\s(.+)$/gm, '<h3>$1</h3>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    
+      .replace(/```(\w+)?\n([\s\S]+?)```/g, (_, lang, code) => `<pre><code class="bot-code">${code.trim()}</code></pre>`)
+      .replace(/^###\s(.+)$/gm, '<h3 class="bot-header">$1</h3>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^\s*[-*+]\s+(.+)$/gm, '<li class="bot-list-item">$1</li>')
+      .replace(/^\s*(\d+\.)\s+(.+)$/gm, '<li class="bot-list-item">$2</li>');
+  
     const paragraphs = formattedResponse.split('\n\n');
-    return paragraphs.map(para =>
-    para.startsWith('- ') ? `<ul><li>${para.substring(2)}</li></ul>` : `<p>${para}</p>`
-    ).join('');
-    };
+    return paragraphs.map(para => {
+      if (para.startsWith('<li')) {
+        return `<ul class="bot-list">${para}</ul>`;
+      } else if (para.startsWith('<pre>')) {
+        return para;
+      } else {
+        return `<p class="bot-paragraph">${para}</p>`;
+      }
+    }).join('');
+  };
 
   const handleSignOut = () => {
     sessionStorage.removeItem("googleApiKey");
@@ -136,7 +144,9 @@ const handleCopy = (text) => {
                 <strong>{chat.type === 'user' ? 'You: ' : 'Bot: '}</strong>
                 {chat.type === 'bot' ? (
                  <>
-                 <div dangerouslySetInnerHTML={{ __html: chat.message }} />
+                  <div className="bot-message-content">
+                     <div dangerouslySetInnerHTML={{ __html: chat.message }} />
+                  </div>
                  <div className="message-actions">
                    <button 
                      onClick={() => handleReadAloud(chat.message)}
@@ -165,7 +175,7 @@ const handleCopy = (text) => {
                  </div>
                </>
                 ) : (
-                  chat.message
+                  <div className="user-message-content">{chat.message}</div>
                 )}
               </div>
             ))}

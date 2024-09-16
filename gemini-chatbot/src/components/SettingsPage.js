@@ -20,7 +20,7 @@ const SettingsPage = () => {
       <h2>Settings</h2>
       <ul>
         <li onClick={() => navigate('/profile')}>Profile</li>
-        <li>Help & Support</li>
+        <li onClick={() => navigate('/help')}>Help & Support</li>
         <li onClick={handleLogOut}>Log out</li>
       </ul>
     </div>
