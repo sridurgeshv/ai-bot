@@ -13,3 +13,11 @@ Response: <p class="bot-paragraph">The issue is not in the context.
 </p>
 Feedback: Positive
 
+Query: git command to push changes to main branch
+Response: <pre><code class="bot-code">git push origin main</code></pre><p class="bot-paragraph">This command will push your local changes to the `main` branch on the remote repository. </p><p class="bot-paragraph"><strong>Explanation:</strong>
+<li class="bot-list-item"><strong>`git push`</strong>: This command pushes your local commits to a remote repository.</li>
+<li class="bot-list-item"><strong>`origin`</strong>: This refers to the name of your remote repository (usually the default name).</li>
+<li class="bot-list-item"><strong>`main`</strong>: This is the name of the branch you want to push your changes to. </li></p><p class="bot-paragraph"><strong>Important Note:</strong> Make sure you have committed your changes locally before pushing them to the remote repository. 
+</p>
+Feedback: Negative
+
