@@ -15,7 +15,7 @@ from langchain_chroma import Chroma
 from dotenv import load_dotenv
 import os
 from sqlalchemy.orm import Session
-from models import User, ChatHistory, Escalation
+from models import User, ChatSession, ChatMessage, Escalation, Feedback
 from database import SessionLocal, engine
 from datetime import datetime
 import models
@@ -42,6 +42,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class ChatRequest(BaseModel):
+    apiKey: str
+    question: str
+    sessionId: int
+
+class ChatSessionRequest(BaseModel):
+    google_id: str
+    title: str
+
+class ChatMessageRequest(BaseModel):
+    session_id: int
+    message_type: str
+    message: str
+
+class FeedbackRequest(BaseModel):
+    query: str
+    response: str
+    feedback: str
 
 # Google OAuth2 Setup
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -83,9 +102,6 @@ async def callback(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during OAuth callback: {str(e)}")
 
-class ChatRequest(BaseModel):
-    apiKey: str
-    question: str
 
 # PDF and Document Retrieval Setup
 loader = PyPDFLoader("final pdf.pdf")  # Replace with your actual PDF file
@@ -126,6 +142,24 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
         response = rag_chain.invoke({"input": request.question})
         answer = response["answer"]
 
+        # Save the user message
+        user_message = ChatMessage(
+            session_id=request.sessionId,
+            message_type='user',
+            message=request.question
+        )
+        db.add(user_message)
+        db.commit()
+
+        # Save the bot message
+        bot_message = ChatMessage(
+            session_id=request.sessionId,
+            message_type='bot',
+            message=answer
+        )
+        db.add(bot_message)
+        db.commit()
+
         # Check if the answer indicates the context doesn't cover the issue
         if "the provided context doesn't contain information about" in answer.lower():
             # Escalate the issue to human support using the internal `/escalate` endpoint
@@ -150,7 +184,64 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
 # POST /escalate route that saves the escalation request in the database
 class EscalateRequest(BaseModel):
     question: str
+
+@app.post("/create_chat_session")
+async def create_chat_session(request: ChatSessionRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.google_id == request.google_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    new_session = ChatSession(user_id=user.id, title=request.title)
+    db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
+
+    return {"session_id": new_session.id, "title": new_session.title}
+
+@app.post("/add_chat_message")
+async def add_chat_message(request: ChatMessageRequest, db: Session = Depends(get_db)):
+    session = db.query(ChatSession).filter(ChatSession.id == request.session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+
+    new_message = ChatMessage(
+        session_id=session.id,
+        message_type=request.message_type,
+        message=request.message
+    )
+    db.add(new_message)
+    db.commit()
+    db.refresh(new_message)
+
+    return {"message_id": new_message.id}
+
+@app.get("/get_chat_sessions/{google_id}")
+async def get_chat_sessions(google_id: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.google_id == google_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    sessions = db.query(ChatSession).filter(ChatSession.user_id == user.id).all()
+    return [{"id": session.id, "title": session.title} for session in sessions]
+
+@app.get("/get_chat_messages/{session_id}")
+async def get_chat_messages(session_id: int, db: Session = Depends(get_db)):
+    messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id).all()
+    return [{"type": msg.message_type, "message": msg.message} for msg in messages]
+
+@app.post("/generate_title")
+async def generate_title(request: dict):
+    api_key = request.get("apiKey")
+    query = request.get("query")
     
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=api_key, temperature=0.7, max_tokens=10)
+    
+    prompt = f"Generate a 3-4 word title for this chat: {query}"
+    response = llm.invoke(prompt)
+    
+    title = response.content.strip()
+    return {"title": title}
+
 @app.post("/escalate")
 async def escalate_to_human_support(request: EscalateRequest, db: Session = Depends(get_db)):
     try:
@@ -166,22 +257,23 @@ async def escalate_to_human_support(request: EscalateRequest, db: Session = Depe
         print(f"Error in escalate_to_human_support: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-class FeedbackRequest(BaseModel):
-    query: str
-    response: str
-    feedback: str
-
 @app.post("/feedback")
-async def save_feedback(request: FeedbackRequest):
+async def save_feedback(request: FeedbackRequest, db: Session = Depends(get_db)):
     try:
-        with open("feedback.txt", "a") as f:
-            f.write(f"Query: {request.query}\nResponse: {request.response}\nFeedback: {request.feedback}\n\n")
+        new_feedback = Feedback(
+            query=request.query,
+            response=request.response,
+            feedback=request.feedback
+        )
+        db.add(new_feedback)
+        db.commit()
+        db.refresh(new_feedback)
         return {"status": "success", "message": "Feedback saved successfully"}
     except Exception as e:
         print(f"Error saving feedback: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/save_chat")
+""" @app.post("/save_chat")
 async def save_chat(request: dict, db: Session = Depends(get_db)):
     google_id = request.get("google_id")
     message_type = request.get("message_type")
@@ -203,13 +295,4 @@ async def save_chat(request: dict, db: Session = Depends(get_db)):
     db.add(chat_history)
     db.commit()
     
-    return {"status": "success"}
-
-@app.get("/get_chat_history/{google_id}")
-async def get_chat_history(google_id: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.google_id == google_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    chat_histories = db.query(ChatHistory).filter(ChatHistory.user_id == user.id).all()
-    return [{"type": ch.message_type, "message": ch.message} for ch in chat_histories]
+    return {"status": "success"} """

@@ -12,6 +12,24 @@
     color: #b9bbbe;
   }
   
+  .new-chat-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+
+  .new-chat-button svg {
+    margin-right: 10px;
+  }
+
   .chat-history-item {
     margin-bottom: 10px;
     padding: 8px;
