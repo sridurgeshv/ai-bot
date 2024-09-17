@@ -15,8 +15,13 @@ from langchain_chroma import Chroma
 from dotenv import load_dotenv
 import os
 from sqlalchemy.orm import Session
-from models import Escalation
+from models import User, ChatHistory, Escalation
 from database import SessionLocal, engine
+from datetime import datetime
+import models
+
+models.Base.metadata.create_all(bind=engine)
+
 
 load_dotenv()
 
@@ -175,3 +180,36 @@ async def save_feedback(request: FeedbackRequest):
     except Exception as e:
         print(f"Error saving feedback: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/save_chat")
+async def save_chat(request: dict, db: Session = Depends(get_db)):
+    google_id = request.get("google_id")
+    message_type = request.get("message_type")
+    message = request.get("message")
+    
+    user = db.query(User).filter(User.google_id == google_id).first()
+    if not user:
+        user = User(google_id=google_id, name="Unknown")  # You might want to get the name from Google API
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    
+    chat_history = ChatHistory(
+        user_id=user.id,
+        message_type=message_type,
+        message=message,
+        timestamp=datetime.now().isoformat()
+    )
+    db.add(chat_history)
+    db.commit()
+    
+    return {"status": "success"}
+
+@app.get("/get_chat_history/{google_id}")
+async def get_chat_history(google_id: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.google_id == google_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    chat_histories = db.query(ChatHistory).filter(ChatHistory.user_id == user.id).all()
+    return [{"type": ch.message_type, "message": ch.message} for ch in chat_histories]

@@ -8,6 +8,7 @@ import '../styles/ChatPage.css';
 const ChatPage = () => {
   const [query, setQuery] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
+  const [googleId, setGoogleId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -19,23 +20,40 @@ const ChatPage = () => {
   const googleApiKey = sessionStorage.getItem("googleApiKey");
 
   useEffect(() => {
+    const storedGoogleId = sessionStorage.getItem("googleId");
+    if (storedGoogleId) {
+      setGoogleId(storedGoogleId);
+      fetchChatHistory(storedGoogleId);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!googleApiKey) {
       navigate('/');
     }
   }, [googleApiKey, navigate]);
 
-// Handle text-to-speech for the bot response
-const handleReadAloud = (text) => {
-  if (isSpeaking) {
-    window.speechSynthesis.cancel();
-    setIsSpeaking(false);
-  } else {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.onend = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
-  }
-};
+  const fetchChatHistory = async (id) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/get_chat_history/${id}`);
+      setChatHistory(response.data);
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+    }
+  };
+
+  // Handle text-to-speech for the bot response
+  const handleReadAloud = (text) => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    } else {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.onend = () => setIsSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+      setIsSpeaking(true);
+    }
+  };
 
 const handleFeedback = async (messageIndex, isPositive) => {
   const feedback = isPositive ? 'Positive' : 'Negative';
@@ -49,47 +67,65 @@ const handleFeedback = async (messageIndex, isPositive) => {
       feedback: feedback
     });
 
-  // Update feedback state
-  setFeedbackStates(prev => ({
-    ...prev,
-    [messageIndex]: isPositive ? 'positive' : 'negative'
-  }));
+    // Update feedback state
+    setFeedbackStates(prev => ({
+      ...prev,
+      [messageIndex]: isPositive ? 'positive' : 'negative'
+    }));
 
-  console.log(`Feedback for message ${messageIndex}: ${feedback}`);
-} catch (error) {
-  console.error("Error saving feedback:", error);
-}
+    console.log(`Feedback for message ${messageIndex}: ${feedback}`);
+  } catch (error) {
+    console.error("Error saving feedback:", error);
+  }
 };
 
-const handleCopy = (text) => {
-  navigator.clipboard.writeText(text).then(() => {
-    // Optionally, show a "Copied!" message
-    console.log("Text copied to clipboard");
-  });
-};
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      // Optionally, show a "Copied!" message
+      console.log("Text copied to clipboard");
+    });
+  };
 
   const handleQuerySubmit = async () => {
     if (!query.trim()) return;
 
     setIsLoading(true);
-    setChatHistory(prev => [...prev, { type: 'user', message: query }]);
+    const newUserMessage = { type: 'user', message: query };
+    setChatHistory(prev => [...prev, newUserMessage]);
 
     try {
       const res = await axios.post("http://localhost:8000/chat", {
         apiKey: googleApiKey,
         question: query
       });
+
+      let newBotMessage;
       if (!res.data.contextual) {
-        // Bot couldn't find a relevant answer
         const botResponse = formatBotResponse(res.data.answer);
-        setChatHistory(prev => [...prev, { type: 'bot', message: botResponse }]);
+        newBotMessage = { type: 'bot', message: botResponse };
+        setChatHistory(prev => [...prev, newBotMessage]);
         setShowEscalationPrompt(true);
       } else {
-        // Bot found an answer
         const botResponse = formatBotResponse(res.data.answer);
-        setChatHistory(prev => [...prev, { type: 'bot', message: botResponse }]);
+        newBotMessage = { type: 'bot', message: botResponse };
+        setChatHistory(prev => [...prev, newBotMessage]);
         setShowEscalationPrompt(false);
       }
+
+      // Save user message
+      await axios.post("http://localhost:8000/save_chat", {
+        google_id: googleId,
+        message_type: 'user',
+        message: query
+      });
+
+      // Save bot message
+      await axios.post("http://localhost:8000/save_chat", {
+        google_id: googleId,
+        message_type: 'bot',
+        message: res.data.answer
+      });
+      
     } catch (error) {
       console.error("Error fetching chatbot response:", error);
       setChatHistory(prev => [...prev, { type: 'error', message: "Sorry, I couldn't process your request." }]);
@@ -131,10 +167,10 @@ const handleCopy = (text) => {
 
   const handleSignOut = () => {
     sessionStorage.removeItem("googleApiKey");
+    sessionStorage.removeItem("googleId");
     navigate('/');
   };
 
-  // Update handleSettings function in ChatPage.js
   const handleSettings = () => {
     navigate('/settings');
   };
@@ -225,8 +261,7 @@ const handleCopy = (text) => {
               </div>
             ))}
             {isLoading && <div className="chat-message bot"><strong>Bot:</strong> Thinking...</div>}
-          
-            {/* Show Escalation prompt when needed */}
+
             {showEscalationPrompt && (
               <div className="escalation-prompt">
                 <p>Would you like to raise this issue for further assistance?</p>
