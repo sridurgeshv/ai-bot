@@ -103,9 +103,53 @@
     font-weight: normal;
   }
   
+  .chat-message.user {
+    background-color: #5865f2;
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+    text-align: left;
+    max-width: 60%;
+  }
+  
+  .chat-message.bot {
+    background-color: #4f545c;
+    border: 1px solid #444;
+    color: #dcddde;
+  }
+  
+  .chat-message.error {
+    background-color: #000;
+    color: #c62828;
+  }
+  
+  .chat-message strong {
+    color: #ffffff;
+  }
+  
+  .chat-message p {
+    margin-bottom: 10px;
+  }
+  
+  .chat-message h3 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: #ffffff;
+    font-size: 1.1em;
+  }
+  
+  .chat-message ol, .chat-message ul {
+    padding-left: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .chat-message li {
+    margin-bottom: 5px;
+  }
+
   .message-actions {
     position: absolute;
-    bottom: 5px;
+    bottom: 3px;
     right: 5px;
     display: flex;
     gap: 5px;
@@ -131,21 +175,6 @@
     background-color: #4f545c;
     color: #ffffff;
   }
-
-  .chat-message.user {
-    background-color: #5865f2;
-    color: white;
-    align-self: flex-end;
-    margin-left: auto;
-    text-align: left;
-    max-width: 60%;
-  }
-  
-  .chat-message.bot {
-    background-color: #4f545c;
-    border: 1px solid #444;
-    color: #dcddde;
-  }
   
   .bot-message-content {
     font-weight: normal;
@@ -156,6 +185,7 @@
     font-weight: 600;
     color: #ffffff;
     margin-bottom: 10px;
+    margin-top: 15px;
   }
   
   .bot-paragraph {
@@ -175,7 +205,6 @@
   }
   
   .bot-list-item::before {
-    content: "•";
     position: absolute;
     left: 0;
     color: #ffffff;
@@ -191,6 +220,7 @@
     white-space: pre-wrap;
     color: #e6e6e6;
     font-size: 0.9em;
+    overflow-x: auto;
   }
   
   .user-message-content {
@@ -208,40 +238,13 @@
     color: #e6e6e6;
     font-size: 0.9em;
   }
-  
-  .chat-message.error {
-    background-color: #000;
-    color: #c62828;
-}
 
-.chat-message strong {
-  color: #ffffff;
-}
-  
-.chat-message p {
-  margin-bottom: 10px;
-}
-
-.chat-message h3 {
-  margin-top: 15px;
-  margin-bottom: 10px;
-  color: #ffffff;
-  font-size: 1.1em;
-}
 
 .message-actions button.selected {
   background-color: #e0e0e0;
   border-radius: 50%;
 }
 
-  .chat-message ol, .chat-message ul {
-    padding-left: 20px;
-    margin-bottom: 10px;
-  }
-  
-  .chat-message li {
-    margin-bottom: 5px;
-  }
   
   .chat-input {
     display: flex;

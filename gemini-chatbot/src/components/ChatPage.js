@@ -111,12 +111,12 @@ const handleCopy = (text) => {
 
   const formatBotResponse = (response) => {
     const formattedResponse = response
-      .replace(/```(\w+)?\n([\s\S]+?)```/g, (_, lang, code) => `<pre><code class="bot-code">${code.trim()}</code></pre>`)
+      .replace(/```(\w+)?\n([\s\S]+?)```/g, (_, lang, code) => `<pre><code class="bot-code language-${lang || ''}">${code.trim()}</code></pre>`)
       .replace(/^###\s(.+)$/gm, '<h3 class="bot-header">$1</h3>')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/^\s*[-*+]\s+(.+)$/gm, '<li class="bot-list-item">$1</li>')
       .replace(/^\s*(\d+\.)\s+(.+)$/gm, '<li class="bot-list-item">$2</li>');
-  
+
     const paragraphs = formattedResponse.split('\n\n');
     return paragraphs.map(para => {
       if (para.startsWith('<li')) {
