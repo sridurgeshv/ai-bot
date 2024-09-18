@@ -16,3 +16,9 @@ In `'gemini feedback'` enter the command `pip install -r requirements.txt` for i
 
 Enter `npm start` in `'gemini-chatbot'` directory.
 Enter `uvicorn main:app --reload` in `'gemini feedback'` directory to start the server.
+
+
+for database, we run :
+```bash
+python init_db.py
+```
