@@ -33,7 +33,6 @@ const SignInPage = () => {
 
   return (
     <div className="sign-in-container" style={{backgroundImage: `url(${backgroundImage})`}}>
-      <h2>Welcome to the Tech Support Bot</h2>
       {userName ? (
         <>
           <p>Hello, {userName}!</p>
