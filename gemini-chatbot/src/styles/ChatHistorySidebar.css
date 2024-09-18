@@ -42,9 +42,10 @@
   }
   
   .chat-session.active {
-    background-color: #e0e0e0;
+    background-color: #36393f;
   }
   
   .chat-session:hover {
-    background-color: #f0f0f0;
+    color:white;
+    background-color: darkgrey;
   }

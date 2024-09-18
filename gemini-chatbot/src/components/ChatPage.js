@@ -16,6 +16,7 @@ const ChatPage = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [feedbackStates, setFeedbackStates] = useState({});
   const [showEscalationPrompt, setShowEscalationPrompt] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const googleApiKey = sessionStorage.getItem("googleApiKey");
@@ -41,12 +42,18 @@ const ChatPage = () => {
     const fetchChatSessions = async (id) => {
       try {
         const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
-        setChatSessions(response.data);
-        if (response.data.length > 0) {
-          setCurrentSession(response.data[0]);
+        if (Array.isArray(response.data)) {
+          setChatSessions(response.data);
+          if (response.data.length > 0) {
+            setCurrentSession(response.data[0]);
+          }
+        } else {
+          console.error("Unexpected response format:", response.data);
+          setError("Failed to fetch chat sessions. Please try again.");
         }
       } catch (error) {
         console.error("Error fetching chat sessions:", error);
+        setError("Failed to fetch chat sessions. Please try again.");
       }
     };
 
@@ -105,11 +112,11 @@ const ChatPage = () => {
       });
       const newSession = { id: response.data.session_id, title: response.data.title, messages: [] };
       setCurrentSession(newSession);
-      setChatSessions(prevSessions => [newSession, ...prevSessions]);
+      setChatSessions(prevSessions => [newSession, ...(prevSessions || [])]);
       setQuery("");
     } catch (error) {
       console.error("Error creating new chat session:", error);
-      alert(`Failed to create a new chat session. ${error.response?.data?.detail || error.message}`);
+      setError(`Failed to create a new chat session. ${error.response?.data?.detail || error.message}`);
     }
   };
 
@@ -138,7 +145,7 @@ const ChatPage = () => {
       await handleNewChat();
       return;
     }
-  
+
     setIsLoading(true);
     const newUserMessage = { type: 'user', message: query };
     const updatedMessages = [...(currentSession.messages || []), newUserMessage];
@@ -170,9 +177,9 @@ const ChatPage = () => {
         ...prevSession,
         messages: finalUpdatedMessages
       }));
-  
+
       setChatSessions(prevSessions =>
-        prevSessions.map(session =>
+        (prevSessions || []).map(session =>
           session.id === currentSession.id ? { ...session, messages: finalUpdatedMessages } : session
         )
       );
@@ -181,7 +188,7 @@ const ChatPage = () => {
         const newTitle = await generateSessionTitle(query);
         setCurrentSession(prevSession => ({ ...prevSession, title: newTitle }));
         setChatSessions(prevSessions =>
-          prevSessions.map(session =>
+          (prevSessions || []).map(session =>
             session.id === currentSession.id ? { ...session, title: newTitle } : session
           )
         );
@@ -242,6 +249,9 @@ const ChatPage = () => {
   /*const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };*/
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
 
   return (
     <div className="chat-container">
@@ -266,7 +276,7 @@ const ChatPage = () => {
         {isSidebarOpen ? (
           <div className="sidebar-container">
             <ChatHistorySidebar
-              chatSessions={chatSessions}
+              chatSessions={chatSessions || []}
               currentSession={currentSession}
               onSessionClick={handleSessionClick}
               onNewChat={handleNewChat}
@@ -283,7 +293,7 @@ const ChatPage = () => {
 
         <div className="chat-main">
           <div className="chat-history">
-          {currentSession && currentSession.messages.map((chat, index) => (
+            {currentSession && currentSession.messages && currentSession.messages.map((chat, index) => (
               <div key={index} className={`chat-message ${chat.type}`}>
                 <strong>{chat.type === 'user' ? 'You: ' : 'Bot: '}</strong>
                 {chat.type === 'bot' ? (

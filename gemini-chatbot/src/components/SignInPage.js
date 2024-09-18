@@ -39,7 +39,7 @@ const SignInPage = () => {
     <div className="sign-in-container" style={{backgroundImage: `url(${backgroundImage})`}}>
       {userName ? (
         <>
-          <p>Hello, {userName}!</p>
+          <h3>Hello, {userName}!</h3>
           <p>
             You need to get a Gemini API key from{" "}
             <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Gemini API key</a>
