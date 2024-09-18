@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,9 +19,12 @@ from models import User, ChatSession, ChatMessage, Escalation, Feedback
 from database import SessionLocal, engine
 from datetime import datetime
 import models
+import logging
 
 models.Base.metadata.create_all(bind=engine)
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -37,7 +40,7 @@ def get_db():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000"],  # Add any other origins you need
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,7 +53,7 @@ class ChatRequest(BaseModel):
 
 class ChatSessionRequest(BaseModel):
     google_id: str
-    title: str
+    title: str = Field(default="New Chat")
 
 class ChatMessageRequest(BaseModel):
     session_id: int
@@ -133,7 +136,6 @@ prompt = ChatPromptTemplate.from_messages(
 @app.post("/chat")
 async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
     try:
-        # Initialize the language model with the API key from the request
         llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=request.apiKey, temperature=0, max_tokens=None, timeout=None)
 
         question_answer_chain = create_stuff_documents_chain(llm, prompt)
@@ -162,11 +164,9 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
 
         # Check if the answer indicates the context doesn't cover the issue
         if "the provided context doesn't contain information about" in answer.lower():
-            # Escalate the issue to human support using the internal `/escalate` endpoint
             escalation_result = await escalate_to_human_support(
                 EscalateRequest(question=request.question), db
             )
-
             return {
                 "answer": answer,
                 "contextual": False,
@@ -174,12 +174,11 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
                 "escalation": escalation_result
             }
         else:
-            # Return the response if the answer is based on context
             return {"answer": answer, "contextual": True}
 
     except Exception as e:
-        print(f"Error in chat_with_model: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error in chat_with_model: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 # POST /escalate route that saves the escalation request in the database
 class EscalateRequest(BaseModel):
@@ -187,16 +186,31 @@ class EscalateRequest(BaseModel):
 
 @app.post("/create_chat_session")
 async def create_chat_session(request: ChatSessionRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.google_id == request.google_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    logger.info(f"Received request to create chat session: {request}")
+    try:
+        if not request.google_id:
+            raise ValueError("google_id is required")
+        
+        user = db.query(User).filter(User.google_id == request.google_id).first()
+        if not user:
+            user = User(google_id=request.google_id, name="Unknown")
+            db.add(user)
+            db.commit()
+            db.refresh(user)
 
-    new_session = ChatSession(user_id=user.id, title=request.title)
-    db.add(new_session)
-    db.commit()
-    db.refresh(new_session)
+        new_session = ChatSession(user_id=user.id, title=request.title)
+        db.add(new_session)
+        db.commit()
+        db.refresh(new_session)
 
-    return {"session_id": new_session.id, "title": new_session.title}
+        logger.info(f"Created new chat session: {new_session.id}")
+        return {"session_id": new_session.id, "title": new_session.title}
+    except ValueError as ve:
+        logger.error(f"Validation error: {str(ve)}")
+        raise HTTPException(status_code=422, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Error creating chat session: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating chat session: {str(e)}")
 
 @app.post("/add_chat_message")
 async def add_chat_message(request: ChatMessageRequest, db: Session = Depends(get_db)):

@@ -25,6 +25,11 @@ const ChatPage = () => {
     if (storedGoogleId) {
       setGoogleId(storedGoogleId);
       fetchChatSessions(storedGoogleId);
+    } else {
+      console.error("Google ID not found in session storage");
+      // Redirect to login or show an error message
+      alert("User not authenticated. Please log in.");
+      // You might want to redirect to the login page here
     }
   }, []);
 
@@ -92,15 +97,26 @@ const ChatPage = () => {
 
   const handleNewChat = async () => {
     try {
+      if (!googleId) {
+        throw new Error("Google ID is not available");
+      }
       const response = await axios.post("http://localhost:8000/create_chat_session", {
         google_id: googleId,
         title: "New Chat"
       });
       const newSession = { id: response.data.session_id, title: response.data.title, messages: [] };
       setCurrentSession(newSession);
-      setChatSessions([newSession, ...chatSessions]);
+      setChatSessions(prevSessions => [newSession, ...prevSessions]);
+      setQuery("");
     } catch (error) {
       console.error("Error creating new chat session:", error);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+        alert(`Failed to create a new chat session. Error: ${error.response.data.detail || error.message}`);
+      } else {
+        alert(`Failed to create a new chat session. ${error.message}`);
+      }
     }
   };
 
@@ -122,26 +138,29 @@ const ChatPage = () => {
   };
 
   const handleQuerySubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
     if (!query.trim()) return;
-
+  
     if (!currentSession) {
       await handleNewChat();
       return;
     }
-
+  
     setIsLoading(true);
     const newUserMessage = { type: 'user', message: query };
     const updatedMessages = [...currentSession.messages, newUserMessage];
-    setCurrentSession({ ...currentSession, messages: updatedMessages });
-
+    setCurrentSession(prevSession => ({
+      ...prevSession,
+      messages: updatedMessages
+    }));
+  
     try {
       const res = await axios.post("http://localhost:8000/chat", {
         apiKey: googleApiKey,
         question: query,
         sessionId: currentSession.id
       });
-
+  
       let newBotMessage;
       if (!res.data.contextual) {
         const botResponse = formatBotResponse(res.data.answer);
@@ -152,10 +171,19 @@ const ChatPage = () => {
         newBotMessage = { type: 'bot', message: botResponse };
         setShowEscalationPrompt(false);
       }
-
+  
       const finalUpdatedMessages = [...updatedMessages, newBotMessage];
-      setCurrentSession({ ...currentSession, messages: finalUpdatedMessages });
-
+      setCurrentSession(prevSession => ({
+        ...prevSession,
+        messages: finalUpdatedMessages
+      }));
+  
+      setChatSessions(prevSessions =>
+        prevSessions.map(session =>
+          session.id === currentSession.id ? { ...session, messages: finalUpdatedMessages } : session
+        )
+      );
+  
       if (currentSession.title === "New Chat") {
         const newTitle = await generateSessionTitle(query);
         setCurrentSession(prevSession => ({ ...prevSession, title: newTitle }));
@@ -165,33 +193,16 @@ const ChatPage = () => {
           )
         );
       }
-
-      await axios.post("http://localhost:8000/add_chat_message", {
-        session_id: currentSession.id,
-        message_type: 'user',
-        message: query
-      });
-      await axios.post("http://localhost:8000/add_chat_message", {
-        session_id: currentSession.id,
-        message_type: 'bot',
-        message: res.data.answer
-      });
-
-      setChatSessions(prevSessions =>
-        prevSessions.map(session =>
-          session.id === currentSession.id ? { ...session, messages: finalUpdatedMessages } : session
-        )
-      );
-
+  
+      setQuery("");
     } catch (error) {
       console.error("Error fetching chatbot response:", error);
-      setCurrentSession({
-        ...currentSession,
-        messages: [...updatedMessages, { type: 'error', message: "Sorry, I couldn't process your request." }]
-      });
+      setCurrentSession(prevSession => ({
+        ...prevSession,
+        messages: [...prevSession.messages, { type: 'error', message: "An error occurred. Please try again." }]
+      }));
     } finally {
       setIsLoading(false);
-      setQuery("");
     }
   };
 
