@@ -15,6 +15,7 @@ const SignInPage = () => {
     const googleId = urlParams.get('googleId');
     if (name) {
       setUserName(name);
+      sessionStorage.setItem("userName", name);
       if (googleId) {
         sessionStorage.setItem("googleId", googleId);
       }

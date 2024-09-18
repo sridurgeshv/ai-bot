@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/ProfilePage.css'; // Add CSS as needed
 
@@ -7,9 +7,19 @@ const ProfilePage = () => {
   const [preferredName, setPreferredName] = useState('');
   const navigate = useNavigate();
 
+  useEffect(() => {
+    //fetch full name from session storage when component loads
+    const storedUserName = sessionStorage.getItem('userName');
+    if (storedUserName) {
+      setFullName(storedUserName); //Set fullname
+      setPreferredName(storedUserName); //initially set preferred name to full name
+      }
+    }, []);
+
   const handleUpdate = () => {
-    console.log(`Full Name: ${fullName}, Preferred Name: ${preferredName}`);
-    // You can add logic here to save profile data
+    console.log(`Preferred Name: ${preferredName}`);
+    sessionStorage.setItem('preferredName', preferredName); // store preferred name in session storage
+    alert('Preferred name updated successfully!');
   };
 
     const handleBack = () => {
@@ -24,7 +34,7 @@ const ProfilePage = () => {
             <input
               type="text"
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              disabled // fullname can't be edited
             />
           </div>
           <div className="form-group">
