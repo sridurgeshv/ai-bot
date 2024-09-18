@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import ChatHistorySidebar from './ChatHistorySidebar';
-import { ChevronLeft, ChevronRight, Volume2, ThumbsUp, ThumbsDown, Copy, PlusCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Volume2, ThumbsUp, ThumbsDown, Copy} from 'lucide-react';
 import '../styles/ChatPage.css';
 
 const ChatPage = () => {
   const [query, setQuery] = useState("");
-  // const [chatHistory, setChatHistory] = useState([]);
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
   const [googleId, setGoogleId] = useState(null);
@@ -46,15 +45,6 @@ const ChatPage = () => {
       console.error("Error fetching chat sessions:", error);
     }
   };
-
-  /* const fetchChatHistory = async (id) => {
-    try {
-      const response = await axios.get(`http://localhost:8000/get_chat_history/${id}`);
-      setChatHistory(response.data);
-    } catch (error) {
-      console.error("Error fetching chat history:", error);
-    }
-  }; */
 
   // Handle text-to-speech for the bot response
   const handleReadAloud = (text) => {
@@ -120,9 +110,9 @@ const ChatPage = () => {
 
   const generateSessionTitle = async (query) => {
     try {
-      const response = await axios.post("http://localhost:8000/generate_title", { 
+      const response = await axios.post("http://localhost:8000/generate_title", {
         apiKey: googleApiKey,
-        query: query 
+        query: query
       });
       return response.data.title;
     } catch (error) {
@@ -131,12 +121,11 @@ const ChatPage = () => {
     }
   };
 
-  const handleQuerySubmit = async () => {
+  const handleQuerySubmit = async (e) => {
+    e.preventDefault(); // Prevent default form submission
     if (!query.trim()) return;
 
     if (!currentSession) {
-      console.error("No active chat session");
-      // Optionally, you can create a new session here
       await handleNewChat();
       return;
     }
@@ -167,18 +156,16 @@ const ChatPage = () => {
       const finalUpdatedMessages = [...updatedMessages, newBotMessage];
       setCurrentSession({ ...currentSession, messages: finalUpdatedMessages });
 
-      // Update session title if it's a new chat
       if (currentSession.title === "New Chat") {
         const newTitle = await generateSessionTitle(query);
         setCurrentSession(prevSession => ({ ...prevSession, title: newTitle }));
-        setChatSessions(prevSessions => 
-          prevSessions.map(session => 
+        setChatSessions(prevSessions =>
+          prevSessions.map(session =>
             session.id === currentSession.id ? { ...session, title: newTitle } : session
           )
         );
       }
 
-      // Save messages to the database
       await axios.post("http://localhost:8000/add_chat_message", {
         session_id: currentSession.id,
         message_type: 'user',
@@ -190,17 +177,16 @@ const ChatPage = () => {
         message: res.data.answer
       });
 
-      // Update chat sessions list
-      setChatSessions(prevSessions => 
-        prevSessions.map(session => 
+      setChatSessions(prevSessions =>
+        prevSessions.map(session =>
           session.id === currentSession.id ? { ...session, messages: finalUpdatedMessages } : session
         )
       );
 
     } catch (error) {
       console.error("Error fetching chatbot response:", error);
-      setCurrentSession({ 
-        ...currentSession, 
+      setCurrentSession({
+        ...currentSession,
         messages: [...updatedMessages, { type: 'error', message: "Sorry, I couldn't process your request." }]
       });
     } finally {
@@ -275,9 +261,6 @@ const ChatPage = () => {
       <div className="chat-content">
         {isSidebarOpen ? (
           <div className="sidebar-container">
-            <button className="new-chat-button" onClick={handleNewChat}>
-              <PlusCircle size={24} /> New Chat
-            </button>
             <ChatHistorySidebar
               chatSessions={chatSessions}
               currentSession={currentSession}
@@ -358,9 +341,14 @@ const ChatPage = () => {
               placeholder="Please feel free to inquire about any aspect of open-source software...."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleQuerySubmit()}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleQuerySubmit(e);
+                }
+              }}
             />
-            <button className='send-option' onClick={handleQuerySubmit} disabled={isLoading}>Send</button>
+            <button type="submit" className='send-option' disabled={isLoading}>Send</button>
           </div>
         </div>
       </div>

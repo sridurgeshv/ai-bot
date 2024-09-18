@@ -135,10 +135,10 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
     try:
         # Initialize the language model with the API key from the request
         llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=request.apiKey, temperature=0, max_tokens=None, timeout=None)
-        
+
         question_answer_chain = create_stuff_documents_chain(llm, prompt)
         rag_chain = create_retrieval_chain(retriever, question_answer_chain)
-        
+
         response = rag_chain.invoke({"input": request.question})
         answer = response["answer"]
 
@@ -164,7 +164,7 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
         if "the provided context doesn't contain information about" in answer.lower():
             # Escalate the issue to human support using the internal `/escalate` endpoint
             escalation_result = await escalate_to_human_support(
-            EscalateRequest(question=request.question), db
+                EscalateRequest(question=request.question), db
             )
 
             return {
@@ -176,7 +176,7 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
         else:
             # Return the response if the answer is based on context
             return {"answer": answer, "contextual": True}
-    
+
     except Exception as e:
         print(f"Error in chat_with_model: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
