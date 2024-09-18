@@ -36,9 +36,9 @@ const SignInPage = () => {
   };
 
   return (
-    <div className="sign-in-container" style={{backgroundImage: `url(${backgroundImage})`}}>
+    <div className="sign-in-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
       {userName ? (
-        <>
+        <div className="content-container">
           <h3>Hello, {userName}!</h3>
           <p>
             You need to get a Gemini API key from{" "}
@@ -53,13 +53,12 @@ const SignInPage = () => {
             onChange={(e) => setApiKey(e.target.value)}
           />
           <button onClick={handleSubmitApiKey}>Submit</button>
-        </>
+        </div>
       ) : (
-        <button className="signin-button"
-        onClick={handleGoogleSignIn}>Sign in with Google</button>
+        <button className="signin-button" onClick={handleGoogleSignIn}>Sign in with Google</button>
       )}
     </div>
-  );
+  );  
 };
 
 export default SignInPage;

@@ -46,6 +46,7 @@
   }
   
   .chat-session:hover {
+    border-radius: 15px;
     color:white;
-    background-color: darkgrey;
+    background-color: rgb(106, 103, 103);
   }
