@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import ChatHistorySidebar from './ChatHistorySidebar';
-import { ChevronLeft, ChevronRight, Volume2, ThumbsUp, ThumbsDown, Copy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Volume2, ThumbsUp, ThumbsDown, Copy} from 'lucide-react';
 import '../styles/ChatPage.css';
 
 const ChatPage = () => {
   const [query, setQuery] = useState("");
-  const [chatHistory, setChatHistory] = useState([]);
+  const [chatSessions, setChatSessions] = useState([]);
+  const [currentSession, setCurrentSession] = useState(null);
   const [googleId, setGoogleId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
@@ -15,6 +16,7 @@ const ChatPage = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [feedbackStates, setFeedbackStates] = useState({});
   const [showEscalationPrompt, setShowEscalationPrompt] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const googleApiKey = sessionStorage.getItem("googleApiKey");
@@ -23,24 +25,37 @@ const ChatPage = () => {
     const storedGoogleId = sessionStorage.getItem("googleId");
     if (storedGoogleId) {
       setGoogleId(storedGoogleId);
-      fetchChatHistory(storedGoogleId);
-    }
-  }, []);
+      fetchChatSessions(storedGoogleId);
+      } else {
+        console.error("Google ID not found in session storage");
+        alert("User not authenticated. Please log in.");
+        navigate('/');
+      }
+    }, [navigate]);
 
-  useEffect(() => {
-    if (!googleApiKey) {
-      navigate('/');
-    }
-  }, [googleApiKey, navigate]);
+    useEffect(() => {
+      if (!googleApiKey) {
+        navigate('/');
+      }
+    }, [googleApiKey, navigate]);
 
-  const fetchChatHistory = async (id) => {
-    try {
-      const response = await axios.get(`http://localhost:8000/get_chat_history/${id}`);
-      setChatHistory(response.data);
-    } catch (error) {
-      console.error("Error fetching chat history:", error);
-    }
-  };
+    const fetchChatSessions = async (id) => {
+      try {
+        const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
+        if (Array.isArray(response.data)) {
+          setChatSessions(response.data);
+          if (response.data.length > 0) {
+            setCurrentSession(response.data[0]);
+          }
+        } else {
+          console.error("Unexpected response format:", response.data);
+          setError("Failed to fetch chat sessions. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error fetching chat sessions:", error);
+        setError("Failed to fetch chat sessions. Please try again.");
+      }
+    };
 
   // Handle text-to-speech for the bot response
   const handleReadAloud = (text) => {
@@ -55,29 +70,29 @@ const ChatPage = () => {
     }
   };
 
-const handleFeedback = async (messageIndex, isPositive) => {
-  const feedback = isPositive ? 'Positive' : 'Negative';
-  const userMessage = chatHistory[messageIndex - 1].message;
-  const botResponse = chatHistory[messageIndex].message;
-
-  try {
-    await axios.post("http://localhost:8000/feedback", {
-      query: userMessage,
-      response: botResponse,
-      feedback: feedback
-    });
-
-    // Update feedback state
-    setFeedbackStates(prev => ({
-      ...prev,
-      [messageIndex]: isPositive ? 'positive' : 'negative'
-    }));
-
-    console.log(`Feedback for message ${messageIndex}: ${feedback}`);
-  } catch (error) {
-    console.error("Error saving feedback:", error);
-  }
-};
+  const handleFeedback = async (messageIndex, isPositive) => {
+    const feedback = isPositive ? 'Positive' : 'Negative';
+    const userMessage = currentSession.messages[messageIndex - 1].message;
+    const botResponse = currentSession.messages[messageIndex].message;
+  
+    try {
+      await axios.post("http://localhost:8000/feedback", {
+        query: userMessage,
+        response: botResponse,
+        feedback: feedback
+      });
+  
+      // Update feedback state
+      setFeedbackStates(prev => ({
+        ...prev,
+        [messageIndex]: isPositive ? 'positive' : 'negative'
+      }));
+  
+      console.log(`Feedback for message ${messageIndex}: ${feedback}`);
+    } catch (error) {
+      console.error("Error saving feedback:", error);
+    }
+  };
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -86,52 +101,108 @@ const handleFeedback = async (messageIndex, isPositive) => {
     });
   };
 
-  const handleQuerySubmit = async () => {
+  const handleNewChat = async () => {
+    try {
+      if (!googleId) {
+        throw new Error("Google ID is not available");
+      }
+      const response = await axios.post("http://localhost:8000/create_chat_session", {
+        google_id: googleId,
+        title: "New Chat"
+      });
+      const newSession = { id: response.data.session_id, title: response.data.title, messages: [] };
+      setCurrentSession(newSession);
+      setChatSessions(prevSessions => [newSession, ...(prevSessions || [])]);
+      setQuery("");
+    } catch (error) {
+      console.error("Error creating new chat session:", error);
+      setError(`Failed to create a new chat session. ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const handleSessionClick = (session) => {
+    setCurrentSession(session);
+  };
+
+  const generateSessionTitle = async (query) => {
+    try {
+      const response = await axios.post("http://localhost:8000/generate_title", {
+        apiKey: googleApiKey,
+        query: query
+      });
+      return response.data.title;
+    } catch (error) {
+      console.error("Error generating session title:", error);
+      return "New Chat";
+    }
+  };
+
+  const handleQuerySubmit = async (e) => {
+    e.preventDefault();
     if (!query.trim()) return;
+
+    if (!currentSession) {
+      await handleNewChat();
+      return;
+    }
 
     setIsLoading(true);
     const newUserMessage = { type: 'user', message: query };
-    setChatHistory(prev => [...prev, newUserMessage]);
-
+    const updatedMessages = [...(currentSession.messages || []), newUserMessage];
+    setCurrentSession(prevSession => ({
+      ...prevSession,
+      messages: updatedMessages
+    }));
+  
     try {
       const res = await axios.post("http://localhost:8000/chat", {
         apiKey: googleApiKey,
-        question: query
+        question: query,
+        sessionId: currentSession.id
       });
-
+  
       let newBotMessage;
       if (!res.data.contextual) {
         const botResponse = formatBotResponse(res.data.answer);
         newBotMessage = { type: 'bot', message: botResponse };
-        setChatHistory(prev => [...prev, newBotMessage]);
         setShowEscalationPrompt(true);
       } else {
         const botResponse = formatBotResponse(res.data.answer);
         newBotMessage = { type: 'bot', message: botResponse };
-        setChatHistory(prev => [...prev, newBotMessage]);
         setShowEscalationPrompt(false);
       }
 
-      // Save user message
-      await axios.post("http://localhost:8000/save_chat", {
-        google_id: googleId,
-        message_type: 'user',
-        message: query
-      });
+      const finalUpdatedMessages = [...updatedMessages, newBotMessage];
+      setCurrentSession(prevSession => ({
+        ...prevSession,
+        messages: finalUpdatedMessages
+      }));
 
-      // Save bot message
-      await axios.post("http://localhost:8000/save_chat", {
-        google_id: googleId,
-        message_type: 'bot',
-        message: res.data.answer
-      });
-      
+      setChatSessions(prevSessions =>
+        (prevSessions || []).map(session =>
+          session.id === currentSession.id ? { ...session, messages: finalUpdatedMessages } : session
+        )
+      );
+  
+      if (currentSession.title === "New Chat") {
+        const newTitle = await generateSessionTitle(query);
+        setCurrentSession(prevSession => ({ ...prevSession, title: newTitle }));
+        setChatSessions(prevSessions =>
+          (prevSessions || []).map(session =>
+            session.id === currentSession.id ? { ...session, title: newTitle } : session
+          )
+        );
+      }
+  
+      setQuery("");
     } catch (error) {
       console.error("Error fetching chatbot response:", error);
-      setChatHistory(prev => [...prev, { type: 'error', message: "Sorry, I couldn't process your request." }]);
+      setCurrentSession(prevSession => ({
+        ...prevSession,
+        messages: [...(prevSession.messages || []), { type: 'error', message: "An error occurred. Please try again." }]
+      }));
     } finally {
       setIsLoading(false);
-      setQuery("");
     }
   };
 
@@ -175,9 +246,12 @@ const handleFeedback = async (messageIndex, isPositive) => {
     navigate('/settings');
   };
 
-  const toggleSidebar = () => {
+  /*const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
-  };
+  };*/
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
 
   return (
     <div className="chat-container">
@@ -201,20 +275,25 @@ const handleFeedback = async (messageIndex, isPositive) => {
       <div className="chat-content">
         {isSidebarOpen ? (
           <div className="sidebar-container">
-            <ChatHistorySidebar chatHistory={chatHistory} />
-            <button className="toggle-sidebar" onClick={toggleSidebar}>
+            <ChatHistorySidebar
+              chatSessions={chatSessions || []}
+              currentSession={currentSession}
+              onSessionClick={handleSessionClick}
+              onNewChat={handleNewChat}
+            />
+            <button className="toggle-sidebar" onClick={() => setIsSidebarOpen(false)}>
               <ChevronLeft size={24} />
             </button>
           </div>
         ) : (
-          <button className="toggle-sidebar sidebar-closed" onClick={toggleSidebar}>
+          <button className="toggle-sidebar sidebar-closed" onClick={() => setIsSidebarOpen(true)}>
             <ChevronRight size={24} />
           </button>
         )}
 
         <div className="chat-main">
           <div className="chat-history">
-            {chatHistory.map((chat, index) => (
+            {currentSession && currentSession.messages && currentSession.messages.map((chat, index) => (
               <div key={index} className={`chat-message ${chat.type}`}>
                 <strong>{chat.type === 'user' ? 'You: ' : 'Bot: '}</strong>
                 {chat.type === 'bot' ? (
@@ -276,9 +355,14 @@ const handleFeedback = async (messageIndex, isPositive) => {
               placeholder="Please feel free to inquire about any aspect of open-source software...."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleQuerySubmit()}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleQuerySubmit(e);
+                }
+              }}
             />
-            <button className='send-option' onClick={handleQuerySubmit} disabled={isLoading}>Send</button>
+            <button type="submit" className='send-option' disabled={isLoading}>Send</button>
           </div>
         </div>
       </div>
