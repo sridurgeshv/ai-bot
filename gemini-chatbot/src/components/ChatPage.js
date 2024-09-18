@@ -25,31 +25,30 @@ const ChatPage = () => {
     if (storedGoogleId) {
       setGoogleId(storedGoogleId);
       fetchChatSessions(storedGoogleId);
-    } else {
-      console.error("Google ID not found in session storage");
-      // Redirect to login or show an error message
-      alert("User not authenticated. Please log in.");
-      // You might want to redirect to the login page here
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!googleApiKey) {
-      navigate('/');
-    }
-  }, [googleApiKey, navigate]);
-
-  const fetchChatSessions = async (id) => {
-    try {
-      const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
-      setChatSessions(response.data);
-      if (response.data.length > 0) {
-        setCurrentSession(response.data[0]);
+      } else {
+        console.error("Google ID not found in session storage");
+        alert("User not authenticated. Please log in.");
+        navigate('/');
       }
-    } catch (error) {
-      console.error("Error fetching chat sessions:", error);
-    }
-  };
+    }, [navigate]);
+
+    useEffect(() => {
+      if (!googleApiKey) {
+        navigate('/');
+      }
+    }, [googleApiKey, navigate]);
+
+    const fetchChatSessions = async (id) => {
+      try {
+        const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
+        setChatSessions(response.data);
+        if (response.data.length > 0) {
+          setCurrentSession(response.data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching chat sessions:", error);
+      }
+    };
 
   // Handle text-to-speech for the bot response
   const handleReadAloud = (text) => {
@@ -110,13 +109,7 @@ const ChatPage = () => {
       setQuery("");
     } catch (error) {
       console.error("Error creating new chat session:", error);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-        alert(`Failed to create a new chat session. Error: ${error.response.data.detail || error.message}`);
-      } else {
-        alert(`Failed to create a new chat session. ${error.message}`);
-      }
+      alert(`Failed to create a new chat session. ${error.response?.data?.detail || error.message}`);
     }
   };
 
@@ -140,7 +133,7 @@ const ChatPage = () => {
   const handleQuerySubmit = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
-  
+
     if (!currentSession) {
       await handleNewChat();
       return;
@@ -148,7 +141,7 @@ const ChatPage = () => {
   
     setIsLoading(true);
     const newUserMessage = { type: 'user', message: query };
-    const updatedMessages = [...currentSession.messages, newUserMessage];
+    const updatedMessages = [...(currentSession.messages || []), newUserMessage];
     setCurrentSession(prevSession => ({
       ...prevSession,
       messages: updatedMessages
@@ -171,7 +164,7 @@ const ChatPage = () => {
         newBotMessage = { type: 'bot', message: botResponse };
         setShowEscalationPrompt(false);
       }
-  
+
       const finalUpdatedMessages = [...updatedMessages, newBotMessage];
       setCurrentSession(prevSession => ({
         ...prevSession,
@@ -199,7 +192,7 @@ const ChatPage = () => {
       console.error("Error fetching chatbot response:", error);
       setCurrentSession(prevSession => ({
         ...prevSession,
-        messages: [...prevSession.messages, { type: 'error', message: "An error occurred. Please try again." }]
+        messages: [...(prevSession.messages || []), { type: 'error', message: "An error occurred. Please try again." }]
       }));
     } finally {
       setIsLoading(false);

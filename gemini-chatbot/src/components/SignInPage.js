@@ -12,10 +12,14 @@ const SignInPage = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const name = urlParams.get('userName');
+    const googleId = urlParams.get('googleId');
     if (name) {
       setUserName(name);
+      if (googleId) {
+        sessionStorage.setItem("googleId", googleId);
+      }
     }
-  }, []);
+    }, []);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -33,7 +37,6 @@ const SignInPage = () => {
 
   return (
     <div className="sign-in-container" style={{backgroundImage: `url(${backgroundImage})`}}>
-      <h2>Welcome to the Tech Support Bot</h2>
       {userName ? (
         <>
           <p>Hello, {userName}!</p>

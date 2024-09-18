@@ -94,12 +94,20 @@ async def callback(request: Request):
         credentials = flow.credentials
         
         if credentials:
-            # Use the credentials to get user info
             user_info_service = build('oauth2', 'v2', credentials=credentials)
             user_info = user_info_service.userinfo().get().execute()
             user_name = user_info.get('name', 'User')
+            google_id = user_info.get('id')
             
-            return RedirectResponse(url=f"http://localhost:3000?userName={user_name}")
+            # Save user to database
+            db = next(get_db())
+            user = db.query(User).filter(User.google_id == google_id).first()
+            if not user:
+                user = User(google_id=google_id, name=user_name)
+                db.add(user)
+                db.commit()
+
+            return RedirectResponse(url=f"http://localhost:3000?userName={user_name}&googleId={google_id}")
         else:
             raise HTTPException(status_code=400, detail="Authentication failed")
     except Exception as e:
@@ -162,7 +170,6 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
         db.add(bot_message)
         db.commit()
 
-        # Check if the answer indicates the context doesn't cover the issue
         if "the provided context doesn't contain information about" in answer.lower():
             escalation_result = await escalate_to_human_support(
                 EscalateRequest(question=request.question), db
@@ -190,7 +197,7 @@ async def create_chat_session(request: ChatSessionRequest, db: Session = Depends
     try:
         if not request.google_id:
             raise ValueError("google_id is required")
-        
+
         user = db.query(User).filter(User.google_id == request.google_id).first()
         if not user:
             user = User(google_id=request.google_id, name="Unknown")
@@ -247,12 +254,12 @@ async def get_chat_messages(session_id: int, db: Session = Depends(get_db)):
 async def generate_title(request: dict):
     api_key = request.get("apiKey")
     query = request.get("query")
-    
+
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=api_key, temperature=0.7, max_tokens=10)
-    
+
     prompt = f"Generate a 3-4 word title for this chat: {query}"
     response = llm.invoke(prompt)
-    
+
     title = response.content.strip()
     return {"title": title}
 
