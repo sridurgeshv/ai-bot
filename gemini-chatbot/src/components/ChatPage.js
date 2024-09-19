@@ -262,17 +262,6 @@ const ChatPage = () => {
     navigate('/settings');
   };
 
-  // Modify the renderMessage function
-  const renderMessage = (message) => {
-    if (message.type === 'bot') {
-      return <div dangerouslySetInnerHTML={{ __html: message.message }} />;
-    }
-    return <div>{message.message}</div>;
-  };
-
-  /*const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };*/
   if (error) {
     return <div className="error-message">{error}</div>;
   }
