@@ -249,23 +249,37 @@ const ChatPage = () => {
   };
 
   const formatBotResponse = (response) => {
-    const formattedResponse = response
-      .replace(/```(\w+)?\n([\s\S]+?)```/g, (_, lang, code) => `<pre><code class="bot-code language-${lang || ''}">${code.trim()}</code></pre>`)
-      .replace(/^###\s(.+)$/gm, '<h3 class="bot-header">$1</h3>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^\s*[-*+]\s+(.+)$/gm, '<li class="bot-list-item">$1</li>')
-      .replace(/^\s*(\d+\.)\s+(.+)$/gm, '<li class="bot-list-item">$2</li>');
-
-    const paragraphs = formattedResponse.split('\n\n');
-    return paragraphs.map(para => {
-      if (para.startsWith('<li')) {
-        return `<ul class="bot-list">${para}</ul>`;
-      } else if (para.startsWith('<pre>')) {
-        return para;
-      } else {
-        return `<p class="bot-paragraph">${para}</p>`;
-      }
-    }).join('');
+    // Convert newlines to <br> tags, except within code blocks
+    response = response.replace(/```([\s\S]*?)```/g, (match) => match.replace(/\n/g, '\uFFFF'));
+    response = response.replace(/\n/g, '<br>');
+    response = response.replace(/\uFFFF/g, '\n');
+  
+    // Format code blocks with syntax highlighting
+    response = response.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => `
+      <pre><code class="language-${lang || 'plaintext'}">${code.trim()}</code></pre>
+    `);
+  
+    // Format inline code
+    response = response.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  
+    // Format bold text
+    response = response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+    // Format italic text
+    response = response.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+    // Format unordered lists
+    response = response.replace(/^\s*[-*+]\s+(.+)$/gm, '<li>$1</li>');
+    response = response.replace(/(<li>.*<\/li>(\s*<li>.*<\/li>)*)/g, '<ul>$1</ul>');
+  
+    // Format ordered lists
+    response = response.replace(/^\s*(\d+\.)\s+(.+)$/gm, '<li>$2</li>');
+    response = response.replace(/(<li>.*<\/li>(\s*<li>.*<\/li>)*)/g, '<ol>$1</ol>');
+  
+    // Add spacing between paragraphs
+    response = response.replace(/<\/p><p>/g, '</p><br><p>');
+  
+    return response;
   };
 
   const handleSignOut = () => {
