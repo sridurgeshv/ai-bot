@@ -20,6 +20,7 @@ from database import SessionLocal, engine
 from datetime import datetime
 import models
 import logging
+import re
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -161,11 +162,14 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
         db.add(user_message)
         db.commit()
 
+        # Format the answer
+        formatted_answer = format_bot_response(answer)
+
         # Save the bot message
         bot_message = ChatMessage(
             session_id=request.sessionId,
             message_type='bot',
-            message=answer
+            message=formatted_answer
         )
         db.add(bot_message)
         db.commit()
@@ -181,11 +185,37 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
                 "escalation": escalation_result
             }
         else:
-            return {"answer": answer, "contextual": True}
+            return {"answer": formatted_answer, "contextual": True}
 
     except Exception as e:
         logger.error(f"Error in chat_with_model: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+# Add a new function to format the bot response
+def format_bot_response(response):
+    # Convert newlines to <br> tags, except within code blocks
+    response = re.sub(r'```([\s\S]*?)```', lambda m: m.group(0).replace('\n', '$NEWLINE$'), response)
+    response = response.replace('\n', '<br>')
+    response = response.replace('$NEWLINE$', '\n')
+
+    # Format code blocks
+    response = re.sub(r'```(\w*)\n?([\s\S]*?)```', r'<pre><code class="language-\1">\2</code></pre>', response)
+
+    # Format inline code
+    response = re.sub(r'`([^`\n]+)`', r'<code>\1</code>', response)
+
+    # Format bold text
+    response = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', response)
+
+    # Format italic text
+    response = re.sub(r'\*(.*?)\*', r'<em>\1</em>', response)
+
+    # Format lists
+    response = re.sub(r'^\s*[-*+]\s+(.+)$', r'<li>\1</li>', response, flags=re.MULTILINE)
+    response = re.sub(r'^\s*(\d+\.)\s+(.+)$', r'<li>\2</li>', response, flags=re.MULTILINE)
+    response = re.sub(r'(<li>.*</li>)', r'<ul>\1</ul>', response, flags=re.DOTALL)
+
+    return response
 
 # POST /escalate route that saves the escalation request in the database
 class EscalateRequest(BaseModel):

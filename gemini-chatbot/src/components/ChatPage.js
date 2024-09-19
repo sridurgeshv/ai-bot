@@ -41,36 +41,36 @@ const ChatPage = () => {
 
     const fetchChatSessions = async (id) => {
       try {
-        const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
-        if (Array.isArray(response.data)) {
-          setChatSessions(response.data);
-          if (response.data.length > 0) {
-            const lastSession = response.data[0];
-            setCurrentSession(lastSession);
-            fetchChatMessages(lastSession.id);
+          const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
+          if (Array.isArray(response.data)) {
+              setChatSessions(response.data);
+              if (response.data.length > 0) {
+                  const lastSession = response.data[0];
+                  setCurrentSession(lastSession);
+                  fetchChatMessages(lastSession.id);
+              }
+          } else {
+              console.error("Unexpected response format:", response.data);
+              setError("Failed to fetch chat sessions. Please try again.");
           }
-        } else {
-          console.error("Unexpected response format:", response.data);
-          setError("Failed to fetch chat sessions. Please try again.");
-        }
       } catch (error) {
-        console.error("Error fetching chat sessions:", error);
-        setError("Failed to fetch chat sessions. Please try again.");
+          console.error("Error fetching chat sessions:", error);
+          setError("Failed to fetch chat sessions. Please try again.");
       }
-    };
+  };
 
-    const fetchChatMessages = async (sessionId) => {
-      try {
+  const fetchChatMessages = async (sessionId) => {
+    try {
         const response = await axios.get(`http://localhost:8000/get_chat_messages/${sessionId}`);
         setCurrentSession(prevSession => ({
-          ...prevSession,
-          messages: response.data
+            ...prevSession,
+            messages: response.data
         }));
-      } catch (error) {
+    } catch (error) {
         console.error("Error fetching chat messages:", error);
         setError("Failed to fetch chat messages. Please try again.");
-      }
-    };
+    }
+};
 
   // Handle text-to-speech for the bot response
   const handleReadAloud = (text) => {
@@ -171,74 +171,42 @@ const ChatPage = () => {
     if (!query.trim()) return;
 
     if (!currentSession) {
-      await handleNewChat();
-      return;
+        await handleNewChat();
+        return;
     }
 
     setIsLoading(true);
-    const newUserMessage = { type: 'user', message: query };
-    const updatedMessages = [...(currentSession.messages || []), newUserMessage];
-    setCurrentSession(prevSession => ({
-      ...prevSession,
-      messages: updatedMessages
-    }));
-  
     try {
-      const res = await axios.post("http://localhost:8000/chat", {
-        apiKey: googleApiKey,
-        question: query,
-        sessionId: currentSession.id
-      });
-  
-      let newBotMessage;
-      if (!res.data.contextual) {
-        const botResponse = formatBotResponse(res.data.answer);
-        newBotMessage = { type: 'bot', message: botResponse };
-        setShowEscalationPrompt(true);
-      } else {
-        const botResponse = formatBotResponse(res.data.answer);
-        newBotMessage = { type: 'bot', message: botResponse };
-        setShowEscalationPrompt(false);
-      }
+        const res = await axios.post("http://localhost:8000/chat", {
+            apiKey: googleApiKey,
+            question: query,
+            sessionId: currentSession.id
+        });
 
-      const finalUpdatedMessages = [...updatedMessages, newBotMessage];
-      setCurrentSession(prevSession => ({
-        ...prevSession,
-        messages: finalUpdatedMessages
-      }));
+        const newUserMessage = { type: 'user', message: query };
+        const newBotMessage = { type: 'bot', message: res.data.answer };
 
-      setChatSessions(prevSessions =>
-        (prevSessions || []).map(session =>
-          session.id === currentSession.id ? { ...session, messages: finalUpdatedMessages } : session
-        )
-      );
-  
-      /*if (currentSession.title === "New Chat") {
-        const newTitle = await generateSessionTitle(query);
-        setCurrentSession(prevSession => ({ ...prevSession, title: newTitle }));
-        setChatSessions(prevSessions =>
-          (prevSessions || []).map(session =>
-            session.id === currentSession.id ? { ...session, title: newTitle } : session
-          )
-        );
-      }*/
+        setCurrentSession(prevSession => ({
+            ...prevSession,
+            messages: [...(prevSession.messages || []), newUserMessage, newBotMessage]
+        }));
 
-      if (currentSession.title === "New Chat") {
-          const newTitle = await generateSessionTitle(query);
-          updateSessionTitle(currentSession.id, newTitle);
+        if (currentSession.title === "New Chat") {
+            const newTitle = await generateSessionTitle(query);
+            updateSessionTitle(currentSession.id, newTitle);
         }
-  
-      setQuery("");
+
+        setQuery("");
     } catch (error) {
-      console.error("Error fetching chatbot response:", error);
-      setCurrentSession(prevSession => ({
-        ...prevSession,
-        messages: [...(prevSession.messages || []), { type: 'error', message: "An error occurred. Please try again." }]
-      }));
+        console.error("Error fetching chatbot response:", error);
+        setCurrentSession(prevSession => ({
+            ...prevSession,
+            messages: [...(prevSession.messages || []), { type: 'error', message: "An error occurred. Please try again." }]
+        }));
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
+};
 
   const updateSessionTitle = async (sessionId, newTitle) => {
     try {
@@ -294,6 +262,14 @@ const ChatPage = () => {
     navigate('/settings');
   };
 
+  // Modify the renderMessage function
+  const renderMessage = (message) => {
+    if (message.type === 'bot') {
+      return <div dangerouslySetInnerHTML={{ __html: message.message }} />;
+    }
+    return <div>{message.message}</div>;
+  };
+
   /*const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };*/
@@ -341,82 +317,72 @@ const ChatPage = () => {
         )}
 
         <div className="chat-main">
-          <div className="chat-history">
-            {currentSession && currentSession.messages && currentSession.messages.map((chat, index) => (
-              <div key={index} className={`chat-message ${chat.type}`}>
-                <strong>{chat.type === 'user' ? 'You: ' : 'Bot: '}</strong>
-                {chat.type === 'bot' ? (
-                 <>
-                  <div className="bot-message-content">
-                     <div dangerouslySetInnerHTML={{ __html: chat.message }} />
-                  </div>
-                 <div className="message-actions">
-                   <button 
-                     onClick={() => handleReadAloud(chat.message)}
-                     title={isSpeaking ? "Stop Reading" : "Read Aloud"}
-                   >
-                     <Volume2 size={16} />
-                   </button>
-                   {feedbackStates[index] !== 'negative' && (
-                        <button 
-                          onClick={() => handleFeedback(index, true)}
-                          title="Good response"
-                          className={feedbackStates[index] === 'positive' ? 'selected' : ''}
-                        >
-                          <ThumbsUp size={16} />
+            <div className="chat-history">
+               {currentSession && currentSession.messages && currentSession.messages.map((chat, index) => (
+                   <div key={index} className={`chat-message ${chat.type}`}>
+                        <strong>{chat.type === 'user' ? 'You: ' : 'Bot: '}</strong>
+                        {chat.type === 'bot' ? (
+                         <>
+                          <div className="bot-message-content" dangerouslySetInnerHTML={{ __html: chat.message }} />
+                             <div className="message-actions">
+                                <button
+                                     onClick={() => handleReadAloud(chat.message)}
+                                     title={isSpeaking ? "Stop Reading" : "Read Aloud"}
+                                >
+                          <Volume2 size={16} />
                         </button>
-                      )}
-                      {feedbackStates[index] !== 'positive' && (
+                        {feedbackStates[index] !== 'negative' && (
+                              <button 
+                                onClick={() => handleFeedback(index, true)}
+                                title="Good response"
+                                className={feedbackStates[index] === 'positive' ? 'selected' : ''}
+                              >
+                                <ThumbsUp size={16} />
+                              </button>
+                            )}
+                            {feedbackStates[index] !== 'positive' && (
+                              <button 
+                                onClick={() => handleFeedback(index, false)}
+                                title="Bad response"
+                                className={feedbackStates[index] === 'negative' ? 'selected' : ''}
+                              >
+                                <ThumbsDown size={16} />
+                              </button>
+                            )}
                         <button 
-                          onClick={() => handleFeedback(index, false)}
-                          title="Bad response"
-                          className={feedbackStates[index] === 'negative' ? 'selected' : ''}
+                          onClick={() => handleCopy(chat.message)}
+                          title="Copy message"
                         >
-                          <ThumbsDown size={16} />
+                          <Copy size={16} />
                         </button>
-                      )}
-                   <button 
-                     onClick={() => handleCopy(chat.message)}
-                     title="Copy message"
-                   >
-                     <Copy size={16} />
-                   </button>
-                 </div>
+                      </div>
                </>
                 ) : (
                   <div className="user-message-content">{chat.message}</div>
-                )}
-              </div>
-            ))}
-            {isLoading && <div className="chat-message bot"><strong>Bot:</strong> Thinking...</div>}
-
-            {showEscalationPrompt && (
-              <div className="escalation-prompt">
-                <p>Would you like to raise this issue for further assistance?</p>
-                <button onClick={() => handleEscalation(true)}>Yes</button>
-                <button onClick={() => handleEscalation(false)}>No</button>
-              </div>
-            )}
+                   )}
+                   </div>
+              ))}
+              {isLoading && <div className="chat-message bot"><strong>Bot:</strong> Thinking...</div>}
           </div>
           <div className="chat-input">
-            <textarea
-              className='query-input'
-              placeholder="Please feel free to inquire about any aspect of open-source software...."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleQuerySubmit(e);
-                }
-              }}
-            />
-            <button type="submit" className='send-option' disabled={isLoading}>Send</button>
-          </div>
+                        <textarea
+                            className='query-input'
+                            placeholder="Please feel free to inquire about any aspect of open-source software...."
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleQuerySubmit(e);
+                                }
+                            }}
+                        />
+                        <button onClick={handleQuerySubmit} className='send-option' disabled={isLoading}>Send</button>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default ChatPage;
