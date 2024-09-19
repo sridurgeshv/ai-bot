@@ -145,7 +145,7 @@ prompt = ChatPromptTemplate.from_messages(
 @app.post("/chat")
 async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
     try:
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=request.apiKey, temperature=0, max_tokens=None, timeout=None)
+        llm = ChatGoogleGenerativeAI(model="gemini-1.0-pro", api_key=request.apiKey, temperature=0, max_tokens=None, timeout=None)
 
         question_answer_chain = create_stuff_documents_chain(llm, prompt)
         rag_chain = create_retrieval_chain(retriever, question_answer_chain)
@@ -190,7 +190,7 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Error in chat_with_model: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
-
+    
 # Add a new function to format the bot response
 def format_bot_response(response):
     # Convert newlines to <br> tags, except within code blocks
@@ -309,7 +309,7 @@ async def generate_title(request: dict):
     api_key = request.get("apiKey")
     query = request.get("query")
 
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=api_key, temperature=0.7, max_tokens=10)
+    llm = ChatGoogleGenerativeAI(model="gemini-1.0-pro", api_key=api_key, temperature=0.7, max_tokens=10)
 
     prompt = f"Generate a formal, concise title of 3-4 word title for this chat, without any introductory phrases.: {query}"
     response = llm.invoke(prompt)
