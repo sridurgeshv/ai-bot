@@ -8,18 +8,20 @@ const ProfilePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    //fetch full name from session storage when component loads
+    // Fetch the fullName and preferredName from sessionStorage when the component loads
     const storedUserName = sessionStorage.getItem('userName');
+    const storedPreferredName = sessionStorage.getItem('preferredName');
+    
     if (storedUserName) {
-      setFullName(storedUserName); //Set fullname
-      setPreferredName(storedUserName); //initially set preferred name to full name
-      }
-    }, []);
+      setFullName(storedUserName); // Set full name
+      setPreferredName(storedPreferredName || storedUserName);  // Use preferredName if available, otherwise use fullName
+    }
+  }, []);
 
   const handleUpdate = () => {
     console.log(`Preferred Name: ${preferredName}`);
-    sessionStorage.setItem('preferredName', preferredName); // store preferred name in session storage
-    alert('Preferred name updated successfully!');
+    sessionStorage.setItem('preferredName', preferredName);  // Store preferredName in sessionStorage
+    alert('Preferred name updated!');
   };
 
     const handleBack = () => {
@@ -38,17 +40,17 @@ const ProfilePage = () => {
             />
           </div>
           <div className="form-group">
-            <label>What should we call you?</label>
-            <input
-              type="text"
-              value={preferredName}
-              onChange={(e) => setPreferredName(e.target.value)}
-            />
-          </div>
-          <button onClick={handleUpdate}>Update</button>
-          <button onClick={handleBack}>back</button>
-        </div>
-      );      
+        <label>What should we call you?</label>
+        <input
+          type="text"
+          value={preferredName}
+          onChange={(e) => setPreferredName(e.target.value)}
+        />
+      </div>
+      <button onClick={handleUpdate}>Update</button>
+      <button onClick={handleBack}>Back</button>
+    </div>
+    );      
 };
 
 export default ProfilePage;

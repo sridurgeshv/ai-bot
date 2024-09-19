@@ -15,16 +15,18 @@
   .new-chat-button {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: left;
+    text-align: left;
     background-color: #007bff;
     color: white;
     border: none;
     padding: 10px;
     border-radius: 5px;
     cursor: pointer;
+    width: 200px;
     font-size: 16px;
     margin-bottom: 20px;
-    margin-left: 10px;
+    margin-left: 5px;
   }
 
   .new-chat-button svg {
@@ -40,7 +42,8 @@
     display: flex;
     justify-content: flex-end; /* Align delete button to the right */
     align-items: center;
-    padding: 5px 10px;
+    padding: 5px 10px;    
+    margin-bottom: 5px; 
   }
 
   .delete-session {
@@ -53,6 +56,7 @@
 
   .delete-session:hover {
     color: #ff4d4d;
+    background-color: whitesmoke;
   }
   
   .chat-session.active {

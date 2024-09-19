@@ -347,27 +347,3 @@ async def save_feedback(request: FeedbackRequest, db: Session = Depends(get_db))
     except Exception as e:
         print(f"Error saving feedback: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-""" @app.post("/save_chat")
-async def save_chat(request: dict, db: Session = Depends(get_db)):
-    google_id = request.get("google_id")
-    message_type = request.get("message_type")
-    message = request.get("message")
-    
-    user = db.query(User).filter(User.google_id == google_id).first()
-    if not user:
-        user = User(google_id=google_id, name="Unknown")  # You might want to get the name from Google API
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    
-    chat_history = ChatHistory(
-        user_id=user.id,
-        message_type=message_type,
-        message=message,
-        timestamp=datetime.now().isoformat()
-    )
-    db.add(chat_history)
-    db.commit()
-    
-    return {"status": "success"} """
