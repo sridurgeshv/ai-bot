@@ -311,7 +311,7 @@ async def generate_title(request: dict):
 
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=api_key, temperature=0.7, max_tokens=10)
 
-    prompt = f"Generate a concise 3-4 word title for this chat, without any introductory phrases: {query}"
+    prompt = f"Generate a formal, concise title of 3-4 word title for this chat, without any introductory phrases.: {query}"
     response = llm.invoke(prompt)
 
     title = response.content.strip()

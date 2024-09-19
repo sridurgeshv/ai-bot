@@ -18,6 +18,7 @@ const ChatPage = () => {
   const [showEscalationPrompt, setShowEscalationPrompt] = useState(false);
   const [error, setError] = useState(null);
   const [preferredName, setPreferredName] = useState("");
+  const [showWelcome, setShowWelcome] = useState(true);
   const navigate = useNavigate();
 
   const googleApiKey = sessionStorage.getItem("googleApiKey");
@@ -178,6 +179,8 @@ const ChatPage = () => {
     e.preventDefault();
     if (!query.trim()) return;
 
+    setShowWelcome(false); // Hide welcome message on first query
+
     if (!currentSession) {
         await handleNewChat();
         return;
@@ -320,6 +323,15 @@ const ChatPage = () => {
 
         <div className="chat-main">
             <div className="chat-history">
+              {showWelcome && (
+                <div className="welcome-message">
+                  <h2>
+                    <span style={{color: '#4285F4'}}>Hello, </span>
+                    <span style={{color: '#DB4437'}}>{preferredName.toUpperCase()}</span>
+                  </h2>
+                  <p style={{color: '#5F6368'}}>How can I help you today?</p>
+                </div>
+              )}
                {currentSession && currentSession.messages && currentSession.messages.map((chat, index) => (
                    <div key={index} className={`chat-message ${chat.type}`}>
                         <strong>{chat.type === 'user' ? 'You: ' : 'Bot: '}</strong>
