@@ -17,12 +17,14 @@ const ChatPage = () => {
   const [feedbackStates, setFeedbackStates] = useState({});
   const [showEscalationPrompt, setShowEscalationPrompt] = useState(false);
   const [error, setError] = useState(null);
+  const [preferredName, setPreferredName] = useState("");
   const navigate = useNavigate();
 
   const googleApiKey = sessionStorage.getItem("googleApiKey");
 
   useEffect(() => {
     const storedGoogleId = sessionStorage.getItem("googleId");
+    const storedPreferredName = sessionStorage.getItem("preferredName");
     if (storedGoogleId) {
       setGoogleId(storedGoogleId);
       fetchChatSessions(storedGoogleId);
@@ -30,6 +32,12 @@ const ChatPage = () => {
       console.error("Google ID not found in session storage");
       alert("User not authenticated. Please log in.");
       navigate('/');
+    }
+    if (storedPreferredName) {
+      setPreferredName(storedPreferredName);
+    } else {
+      const userName = sessionStorage.getItem("userName");
+      setPreferredName(userName || "");
     }
   }, [navigate]);
 
