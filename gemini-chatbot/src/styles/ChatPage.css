@@ -246,7 +246,11 @@
   border-radius: 50%;
 }
 
-  
+.escalation-prompt p {
+  color: white;
+  font-weight: bolder;
+}
+ 
   .chat-input {
     display: flex;
     padding: 15px;

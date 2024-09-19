@@ -197,16 +197,21 @@ const ChatPage = () => {
         }
 
         setQuery("");
-    } catch (error) {
+
+      // Check if the response contains the specific phrase and show escalation prompt
+      if (res.data.answer.toLowerCase().includes("the provided context doesn't contain information about")) {
+        setShowEscalationPrompt(true);
+      }
+      } catch (error) {
         console.error("Error fetching chatbot response:", error);
         setCurrentSession(prevSession => ({
-            ...prevSession,
-            messages: [...(prevSession.messages || []), { type: 'error', message: "An error occurred. Please try again." }]
+          ...prevSession,
+          messages: [...(prevSession.messages || []), { type: 'error', message: "An error occurred. Please try again." }]
         }));
-    } finally {
+      } finally {
         setIsLoading(false);
-    }
-};
+      }
+  };
 
   const updateSessionTitle = async (sessionId, newTitle) => {
     try {
@@ -352,6 +357,15 @@ const ChatPage = () => {
                    </div>
               ))}
               {isLoading && <div className="chat-message bot"><strong>Bot:</strong> Thinking...</div>}
+              {showEscalationPrompt && (
+            <div className="escalation-prompt">
+              <p>Would you like to raise this issue for further assistance?</p>
+              <div className="escalation-buttons">
+                <button onClick={() => handleEscalation(true)}>Yes</button>
+                <button onClick={() => handleEscalation(false)}>No</button>
+              </div>
+            </div>
+          )}
           </div>
           <div className="chat-input">
                         <textarea
