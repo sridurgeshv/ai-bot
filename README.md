@@ -1,64 +1,30 @@
-## Self-Learning Bot for Open Source Software
+# Self-Learning Bot for Open Source Software
 
-# Overview
+## Overview
 
-The ChatPage component is part of a self-learning tech support bot designed to assist users with issues related to open-source software. The bot can provide solutions and guidance on topics such as Apache, Git, Ubuntu, Node.js, and PostgreSQL. The component includes features like query handling, feedback submission, text-to-speech, and chat history management.
+This tool is a self-learning tech support bot designed to assist users with troubleshooting and guidance related to popular open-source technologies, including Apache, Git, Ubuntu, Node.js, and PostgreSQL. The bot can handle various user queries and improve its responses based on user feedback, providing a streamlined and automated support experience.
 
-## Features
+## Key Features
 
-- **Tech Support Bot**: Answers questions related to Apache, Git, Ubuntu, Node.js, and PostgreSQL.
+- **Tech Support Bot**: Provides solutions to common issues in open-source software like Apache, Git, Ubuntu, Node.js, and PostgreSQL.
 
-- **Chat Management**: Create, select, and delete chat sessions.
+- **Chat Session Management**: Allows users to create, select, or delete chat sessions for different queries.
 
-- **Chat History**: View and interact with past chat sessions and their messages.
+- **Chat History**: Users can view and interact with past chat sessions, enabling easy reference and continuity.
 
-- **Text-to-Speech**: Read bot responses aloud using the browser's speech synthesis.
+- **Text-to-Speech**: Bot responses can be read aloud using the browser's text-to-speech feature.
 
-- **Feedback System**: Submit feedback on bot responses to improve its performance.
+- **Feedback Mechanism**: Users can submit feedback on the bot's responses, helping improve its accuracy over time.
 
-- **Responsive Sidebar**: Toggle the visibility of the chat history sidebar.
+- **Responsive Sidebar**: Enables toggling the chat history sidebar for an uncluttered interface.
 
-## Usage
+## Why Choose the Self-Learning Bot? 
 
-# Initialization
-
-The component initializes by checking for a stored Google ID in session storage. If the ID is not found, it will redirect the user to the login page.
-
-# Fetching Chat Sessions
-
-On component mount, it retrieves chat sessions based on the stored Google ID and sets the current session if available.
-
-# Handling Queries
-
-Users can submit questions about Apache, Git, Ubuntu, Node.js, and PostgreSQL through a textarea input. If no session exists, a new chat session will be created. The bot’s responses will be displayed, and session titles will be updated if necessary.
-
-## Session Management
-
-New Chat: Create a new chat session for each new query.
-
-Select Session: Click on a session in the sidebar to view its messages.
-
-Delete Session: Remove a chat session from the list.
-
-## Message Actions
-
- Read Aloud: Click the speaker icon to read the bot’s response aloud.
- 
- Feedback: Provide feedback on the bot’s responses using thumbs up or down icons.
- 
- Copy: Copy the bot’s message to the clipboard.
-
-## Sign Out and Settings
-
-Sign Out: Remove the Google API key and ID from session storage and navigate to the login page.
-
-Settings: Navigate to the settings page for profile and account management.
-
-## Why Choose Self Learning Bot?
-A self-learning bot offers continuous improvement and adaptability, making it highly effective for tech support.By handling routine queries and learning from user feedback, it enhances efficiency and delivers personalized, accurate support for technologies like Apache, Git, Ubuntu, Node.js, and PostgreSQL. This leads to a more consistent and engaging user experience.
+This tool leverages a self-learning mechanism, continuously improving with user feedback. It ensures that tech support is more responsive, personalized, and capable of adapting to evolving needs. Whether for routine queries or more complex issues, the bot optimizes the support process for key technologies, delivering accurate, on-demand assistance. Its automation and adaptability provide a consistent, reliable user experience.
 
 ## Installation Instructions
-To use Self learning bot locally, follow these steps:
+
+The component initializes by checking for a stored Google ID in session storage. If the ID is not found, it will redirect the user to the login page.
 
 ### Clone the Repository
 
@@ -66,63 +32,63 @@ First, clone the repository from GitHub:
 ```bash
 git clone https://github.com/sridurgeshv/ai-bot.git
 ```
-## Frontend Setup
+
+### Frontend Setup
 1. Navigate to the frontend directory in your terminal
    ```bash
     cd gemini-chatbot
    ```
 
-2. Install the required node modules:
+2. Install the required dependencies:
    ```bash
    npm install
    ```
 3. Start the frontend application:
-    ```bash
-   npm start
- ```
+```bash
+  npm start
+```
 
+### Backend Setup
 
+### 1.Navigate to the backend directory in another terminal.
 
-Backend Setup
-
-Navigate to the backend directory in another terminal.
-
-  ```bash
+```bash
 cd gemini feedback
  ```
 
-# Create a virtual environment: 
+### 2.Create and activate a virtual environment:
 
 ```bash
-  python -m venv venv
- ```
-
-# Activate the virtual environment:
-```bash
+python -m venv venv
 .\venv\Scripts\activate
 ```
 
- # Install the required Dependencies:
+### 3.Install the required Dependencies:
+
 ```bash
  pip install -r requirements.txt
 ```
 
- # Start the backend server:
+### 4.Start the backend server:
+
 ```bash
  uvicorn main:app --reload
 ```
 
-# for database, we run :
+### Database Initialization
+
+- To set up the database:
+
 ```bash
  python init_db.py
 ```
 ## View the Application
 
- Once both the frontend and backend are running, you can view Self Learning bot in your browser by navigating to http://localhost:3000.
+Once both the frontend and backend are running, access the tool by navigating to `http://localhost:3000` in your browser.
 
- ## Video Demo
+## Video Demo
 
- To see Productivity Hub in action, check out our video demonstration. The video provides an overview of the app's features and shows how to navigate and use the tool effectively.
+A [video demonstration]() is available, showcasing how to use and navigate the Self-Learning Bot. This walkthrough highlights its key features and provides guidance on interacting with the application effectively.
 
    
    
