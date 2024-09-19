@@ -44,9 +44,9 @@ git clone https://github.com/sridurgeshv/ai-bot.git
    npm install
    ```
 3. Start the frontend application:
-```bash
-  npm start
-```
+   ```bash
+   npm start
+   ```
 
 ### Backend Setup
 
