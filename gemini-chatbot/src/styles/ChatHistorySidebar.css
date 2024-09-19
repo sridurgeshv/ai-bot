@@ -37,8 +37,22 @@
   }
   
   .chat-session {
-    padding: 0.5rem 1rem;
+    display: flex;
+    justify-content: flex-end; /* Align delete button to the right */
+    align-items: center;
+    padding: 5px 10px;
+  }
+
+  .delete-session {
+    margin-left: 10px; /* Add some space between the session title and the delete button */
+    background: none;
+    border: none;
+    color: #888;
     cursor: pointer;
+  }
+
+  .delete-session:hover {
+    color: #ff4d4d;
   }
   
   .chat-session.active {
@@ -49,4 +63,9 @@
     border-radius: 15px;
     color:white;
     background-color: rgb(106, 103, 103);
+  }
+
+  .chat-session span {
+    flex-grow: 1; /* Allow the session title to take the available space */
+    cursor: pointer;
   }

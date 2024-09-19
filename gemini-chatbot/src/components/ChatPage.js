@@ -26,12 +26,12 @@ const ChatPage = () => {
     if (storedGoogleId) {
       setGoogleId(storedGoogleId);
       fetchChatSessions(storedGoogleId);
-      } else {
-        console.error("Google ID not found in session storage");
-        alert("User not authenticated. Please log in.");
-        navigate('/');
-      }
-    }, [navigate]);
+    } else {
+      console.error("Google ID not found in session storage");
+      alert("User not authenticated. Please log in.");
+      navigate('/');
+    }
+  }, [navigate]);
 
     useEffect(() => {
       if (!googleApiKey) {
@@ -45,7 +45,9 @@ const ChatPage = () => {
         if (Array.isArray(response.data)) {
           setChatSessions(response.data);
           if (response.data.length > 0) {
-            setCurrentSession(response.data[0]);
+            const lastSession = response.data[0];
+            setCurrentSession(lastSession);
+            fetchChatMessages(lastSession.id);
           }
         } else {
           console.error("Unexpected response format:", response.data);
@@ -54,6 +56,19 @@ const ChatPage = () => {
       } catch (error) {
         console.error("Error fetching chat sessions:", error);
         setError("Failed to fetch chat sessions. Please try again.");
+      }
+    };
+
+    const fetchChatMessages = async (sessionId) => {
+      try {
+        const response = await axios.get(`http://localhost:8000/get_chat_messages/${sessionId}`);
+        setCurrentSession(prevSession => ({
+          ...prevSession,
+          messages: response.data
+        }));
+      } catch (error) {
+        console.error("Error fetching chat messages:", error);
+        setError("Failed to fetch chat messages. Please try again.");
       }
     };
 
@@ -122,6 +137,20 @@ const ChatPage = () => {
 
   const handleSessionClick = (session) => {
     setCurrentSession(session);
+    fetchChatMessages(session.id);
+  };
+
+  const handleDeleteSession = async (sessionId) => {
+    try {
+      await axios.delete(`http://localhost:8000/delete_chat_session/${sessionId}`);
+      setChatSessions(prevSessions => prevSessions.filter(session => session.id !== sessionId));
+      if (currentSession && currentSession.id === sessionId) {
+        setCurrentSession(null);
+      }
+    } catch (error) {
+      console.error("Error deleting chat session:", error);
+      setError("Failed to delete chat session. Please try again.");
+    }
   };
 
   const generateSessionTitle = async (query) => {
@@ -184,7 +213,7 @@ const ChatPage = () => {
         )
       );
   
-      if (currentSession.title === "New Chat") {
+      /*if (currentSession.title === "New Chat") {
         const newTitle = await generateSessionTitle(query);
         setCurrentSession(prevSession => ({ ...prevSession, title: newTitle }));
         setChatSessions(prevSessions =>
@@ -192,7 +221,12 @@ const ChatPage = () => {
             session.id === currentSession.id ? { ...session, title: newTitle } : session
           )
         );
-      }
+      }*/
+
+      if (currentSession.title === "New Chat") {
+          const newTitle = await generateSessionTitle(query);
+          updateSessionTitle(currentSession.id, newTitle);
+        }
   
       setQuery("");
     } catch (error) {
@@ -203,6 +237,20 @@ const ChatPage = () => {
       }));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const updateSessionTitle = async (sessionId, newTitle) => {
+    try {
+      await axios.put(`http://localhost:8000/update_chat_session/${sessionId}`, { title: newTitle });
+      setCurrentSession(prevSession => ({ ...prevSession, title: newTitle }));
+      setChatSessions(prevSessions =>
+        prevSessions.map(session =>
+          session.id === sessionId ? { ...session, title: newTitle } : session
+        )
+      );
+    } catch (error) {
+      console.error("Error updating session title:", error);
     }
   };
 
@@ -276,10 +324,11 @@ const ChatPage = () => {
         {isSidebarOpen ? (
           <div className="sidebar-container">
             <ChatHistorySidebar
-              chatSessions={chatSessions || []}
+              chatSessions={chatSessions}
               currentSession={currentSession}
               onSessionClick={handleSessionClick}
               onNewChat={handleNewChat}
+              onDeleteSession={handleDeleteSession}
             />
             <button className="toggle-sidebar" onClick={() => setIsSidebarOpen(false)}>
               <ChevronLeft size={24} />

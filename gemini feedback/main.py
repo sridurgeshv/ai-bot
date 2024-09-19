@@ -242,12 +242,36 @@ async def get_chat_sessions(google_id: str, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    sessions = db.query(ChatSession).filter(ChatSession.user_id == user.id).all()
+    sessions = db.query(ChatSession).filter(ChatSession.user_id == user.id).order_by(ChatSession.id.desc()).all()
     return [{"id": session.id, "title": session.title} for session in sessions]
+
+@app.put("/update_chat_session/{session_id}")
+async def update_chat_session(session_id: int, request: dict, db: Session = Depends(get_db)):
+    session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+    
+    session.title = request.get("title", session.title)
+    db.commit()
+    return {"status": "success", "message": "Chat session updated"}
+
+@app.delete("/delete_chat_session/{session_id}")
+async def delete_chat_session(session_id: int, db: Session = Depends(get_db)):
+    session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+    
+    # Delete associated messages
+    db.query(ChatMessage).filter(ChatMessage.session_id == session_id).delete()
+    
+    # Delete the session
+    db.delete(session)
+    db.commit()
+    return {"status": "success", "message": "Chat session and associated messages deleted"}
 
 @app.get("/get_chat_messages/{session_id}")
 async def get_chat_messages(session_id: int, db: Session = Depends(get_db)):
-    messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id).all()
+    messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id).order_by(ChatMessage.id).all()
     return [{"type": msg.message_type, "message": msg.message} for msg in messages]
 
 @app.post("/generate_title")
@@ -257,7 +281,7 @@ async def generate_title(request: dict):
 
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=api_key, temperature=0.7, max_tokens=10)
 
-    prompt = f"Generate a 3-4 word title for this chat: {query}"
+    prompt = f"Generate a concise 3-4 word title for this chat, without any introductory phrases: {query}"
     response = llm.invoke(prompt)
 
     title = response.content.strip()

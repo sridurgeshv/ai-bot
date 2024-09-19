@@ -129,6 +129,7 @@
   
   .chat-message p {
     margin-bottom: 10px;
+    color: white;
   }
   
   .chat-message h3 {
