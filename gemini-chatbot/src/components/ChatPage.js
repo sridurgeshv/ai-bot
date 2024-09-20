@@ -84,42 +84,6 @@ const ChatPage = () => {
       }
     }, [googleApiKey, navigate]);
 
-    /*const fetchChatSessions = useCallback(async (id) => {
-      try {
-        const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
-        if (Array.isArray(response.data)) {
-          setChatSessions(response.data);
-          if (response.data.length > 0) {
-            const lastSession = response.data[0];
-            setCurrentSession(lastSession);
-            fetchChatMessages(lastSession.id);
-          } else {
-            setShowWelcome(true);
-          }
-        } else {
-          console.error("Unexpected response format:", response.data);
-          setError("Failed to fetch chat sessions. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error fetching chat sessions:", error);
-        setError("Failed to fetch chat sessions. Please try again.");
-      }
-    }, [fetchChatMessages]);
-
-    const fetchChatMessages = useCallback(async (sessionId) => {
-      try {
-        const response = await axios.get(`http://localhost:8000/get_chat_messages/${sessionId}`);
-        setCurrentSession(prevSession => ({
-          ...prevSession,
-          messages: response.data
-        }));
-        setShowWelcome(response.data.length === 0);
-      } catch (error) {
-        console.error("Error fetching chat messages:", error);
-        setError("Failed to fetch chat messages. Please try again.");
-      }
-    }, []);*/
-
   // Handle text-to-speech for the bot response
   const handleReadAloud = (text) => {
     if (isSpeaking) {
