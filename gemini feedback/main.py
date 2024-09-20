@@ -66,6 +66,10 @@ class FeedbackRequest(BaseModel):
     response: str
     feedback: str
 
+class TitleRequest(BaseModel):
+    apiKey: str
+    query: str
+
 # Google OAuth2 Setup
 current_dir = os.path.dirname(os.path.abspath(__file__))
 client_secret_path = os.path.join(current_dir, 'client_secret.json')
@@ -114,17 +118,25 @@ async def callback(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during OAuth callback: {str(e)}")
 
+# Global variable to store the vectorstore
+vectorstore = None
 
-# PDF and Document Retrieval Setup
-loader = PyPDFLoader("final pdf.pdf")  # Replace with your actual PDF file
-data = loader.load()
+# Function to initialize or get the vectorstore
+def get_vectorstore(api_key: str):
+    global vectorstore
+    if vectorstore is None:
+        # PDF and Document Retrieval Setup
+        loader = PyPDFLoader("final pdf.pdf")  # Replace with your actual PDF file
+        data = loader.load()
 
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000)
-docs = text_splitter.split_documents(data)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000)
+        docs = text_splitter.split_documents(data)
 
-# Create vector store and retriever
-vectorstore = Chroma.from_documents(documents=docs, embedding=GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
-retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10})
+        # Create vector store and retriever
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
+        vectorstore = Chroma.from_documents(documents=docs, embedding=embeddings)
+    
+    return vectorstore
 
 system_prompt = (
     "You are a technical support assistant specializing in diagnosing and resolving issues related to widely-used open-source software."
@@ -145,7 +157,11 @@ prompt = ChatPromptTemplate.from_messages(
 @app.post("/chat")
 async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
     try:
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", api_key=request.apiKey, temperature=0, max_tokens=None, timeout=None)
+        # Initialize or get the vectorstore using the provided API key
+        vectorstore = get_vectorstore(request.apiKey)
+        retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10})
+
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", google_api_key=request.apiKey, temperature=0, max_tokens=None, timeout=None)
 
         question_answer_chain = create_stuff_documents_chain(llm, prompt)
         rag_chain = create_retrieval_chain(retriever, question_answer_chain)
@@ -305,17 +321,20 @@ async def get_chat_messages(session_id: int, db: Session = Depends(get_db)):
     return [{"type": msg.message_type, "message": msg.message} for msg in messages]
 
 @app.post("/generate_title")
-async def generate_title(request: dict):
-    api_key = request.get("apiKey")
-    query = request.get("query")
-
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", api_key=api_key, temperature=0.7, max_tokens=10)
-
-    prompt = f"Generate a formal, concise title of 3-4 word title for this chat, without any introductory phrases.: {query}"
-    response = llm.invoke(prompt)
-
-    title = response.content.strip()
-    return {"title": title}
+async def generate_title(request: TitleRequest):
+    try:
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-1.5-pro", 
+            google_api_key=request.apiKey, 
+            temperature=0.7, 
+            max_tokens=10
+        )
+        prompt = f"Generate a formal, concise title of 3-4 words for this chat, without any introductory phrases: {request.query}"
+        response = llm.invoke(prompt)
+        title = response.content.strip()
+        return {"title": title}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating title: {str(e)}")
 
 @app.post("/escalate")
 async def escalate_to_human_support(request: EscalateRequest, db: Session = Depends(get_db)):

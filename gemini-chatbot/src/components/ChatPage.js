@@ -188,40 +188,40 @@ const ChatPage = () => {
 
     setIsLoading(true);
     try {
-        const res = await axios.post("http://localhost:8000/chat", {
-            apiKey: googleApiKey,
-            question: query,
-            sessionId: currentSession.id
-        });
+      const res = await axios.post("http://localhost:8000/chat", {
+        apiKey: googleApiKey,
+        question: query,
+        sessionId: currentSession.id
+      });
 
-        const newUserMessage = { type: 'user', message: query };
-        const newBotMessage = { type: 'bot', message: res.data.answer };
+      const newUserMessage = { type: 'user', message: query };
+      const newBotMessage = { type: 'bot', message: res.data.answer };
 
-        setCurrentSession(prevSession => ({
-            ...prevSession,
-            messages: [...(prevSession.messages || []), newUserMessage, newBotMessage]
-        }));
+      setCurrentSession(prevSession => ({
+        ...prevSession,
+        messages: [...(prevSession.messages || []), newUserMessage, newBotMessage]
+      }));
 
-        if (currentSession.title === "New Chat") {
-            const newTitle = await generateSessionTitle(query);
-            updateSessionTitle(currentSession.id, newTitle);
-        }
+      if (currentSession.title === "New Chat") {
+        const newTitle = await generateSessionTitle(query);
+        updateSessionTitle(currentSession.id, newTitle);
+      }
 
-        setQuery("");
+      setQuery("");
 
       // Check if the response contains the specific phrase and show escalation prompt
       if (res.data.answer.toLowerCase().includes("the provided context doesn't contain information about")) {
         setShowEscalationPrompt(true);
       }
-      } catch (error) {
-        console.error("Error fetching chatbot response:", error);
-        setCurrentSession(prevSession => ({
-          ...prevSession,
-          messages: [...(prevSession.messages || []), { type: 'error', message: "An error occurred. Please try again." }]
-        }));
-      } finally {
-        setIsLoading(false);
-      }
+    } catch (error) {
+      console.error("Error fetching chatbot response:", error);
+      setCurrentSession(prevSession => ({
+        ...prevSession,
+        messages: [...(prevSession.messages || []), { type: 'error', message: "An error occurred. Please try again." }]
+      }));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updateSessionTitle = async (sessionId, newTitle) => {
