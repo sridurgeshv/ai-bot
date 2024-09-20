@@ -18,7 +18,7 @@ const ChatPage = () => {
   const [showEscalationPrompt, setShowEscalationPrompt] = useState(false);
   const [error, setError] = useState(null);
   const [preferredName, setPreferredName] = useState("");
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
   const navigate = useNavigate();
 
   const googleApiKey = sessionStorage.getItem("googleApiKey");
@@ -50,36 +50,41 @@ const ChatPage = () => {
 
     const fetchChatSessions = async (id) => {
       try {
-          const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
-          if (Array.isArray(response.data)) {
-              setChatSessions(response.data);
-              if (response.data.length > 0) {
-                  const lastSession = response.data[0];
-                  setCurrentSession(lastSession);
-                  fetchChatMessages(lastSession.id);
-              }
+        const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
+        if (Array.isArray(response.data)) {
+          setChatSessions(response.data);
+          if (response.data.length > 0) {
+            const lastSession = response.data[0];
+            setCurrentSession(lastSession);
+            fetchChatMessages(lastSession.id);
           } else {
-              console.error("Unexpected response format:", response.data);
-              setError("Failed to fetch chat sessions. Please try again.");
+            // If there are no existing sessions, show the welcome message
+            setShowWelcome(true);
           }
-      } catch (error) {
-          console.error("Error fetching chat sessions:", error);
+        } else {
+          console.error("Unexpected response format:", response.data);
           setError("Failed to fetch chat sessions. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error fetching chat sessions:", error);
+        setError("Failed to fetch chat sessions. Please try again.");
       }
-  };
+    };
 
-  const fetchChatMessages = async (sessionId) => {
-    try {
+    const fetchChatMessages = async (sessionId) => {
+      try {
         const response = await axios.get(`http://localhost:8000/get_chat_messages/${sessionId}`);
         setCurrentSession(prevSession => ({
-            ...prevSession,
-            messages: response.data
+          ...prevSession,
+          messages: response.data
         }));
-    } catch (error) {
+        // Hide welcome message if there are existing messages
+        setShowWelcome(response.data.length === 0);
+      } catch (error) {
         console.error("Error fetching chat messages:", error);
         setError("Failed to fetch chat messages. Please try again.");
-    }
-};
+      }
+    };
 
   // Handle text-to-speech for the bot response
   const handleReadAloud = (text) => {
@@ -138,6 +143,7 @@ const ChatPage = () => {
       setCurrentSession(newSession);
       setChatSessions(prevSessions => [newSession, ...(prevSessions || [])]);
       setQuery("");
+      setShowWelcome(true); // Show welcome message for new chat
     } catch (error) {
       console.error("Error creating new chat session:", error);
       setError(`Failed to create a new chat session. ${error.response?.data?.detail || error.message}`);
