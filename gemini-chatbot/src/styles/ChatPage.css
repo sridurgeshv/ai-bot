@@ -40,6 +40,7 @@
     position: absolute;
     top: 26px;
     right: 32px;
+    width: 110px;
     background: #36393f;
     border: 1px solid #444;
     border-radius: 4px;
@@ -54,7 +55,7 @@
     padding: 10px 25px;
     background: none;
     color: #fff;
-    border-radius: 18px;
+    border-radius: 15px;
     cursor: pointer;
     text-align: left;
     transition: background-color 0.3s;

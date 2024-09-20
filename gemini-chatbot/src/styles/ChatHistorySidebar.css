@@ -16,14 +16,14 @@
     display: flex;
     align-items: center;
     justify-content: left;
-    text-align: left;
+    text-align: center;
     background-color: #007bff;
     color: white;
     border: none;
     padding: 10px;
     border-radius: 5px;
     cursor: pointer;
-    width: 180px;
+    width: 160px;
     font-size: 16px;
     margin-bottom: 20px;
     margin-left: 5px;
