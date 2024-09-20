@@ -1,8 +1,8 @@
-# AI-Driven Open Source Support Bot: Bridging User Queries with Expert Insights
+# RAGTech Genius: AI-Powered Open-Source Support Assistant
 
 ## Overview
 
-This tool is an AI-Driven Open Source Support Bot designed to assist users with troubleshooting and guidance for popular open-source technologies, including Apache, Git, Ubuntu, Node.js, and PostgreSQL. The bot efficiently addresses a wide range of user queries and escalates unresolved issues to backend developers for further training. By combining automated responses with human expertise, it provides a streamlined and effective support experience that continually evolves based on user interactions.
+RAGTech Genius is an AI-powered technical support assistant for popular open-source technologies, including Apache, Git, Ubuntu, Node.js, and PostgreSQL also leveraging the cutting-edge Retrieval-Augmented Generation (RAG) technology. It integrates with Google’s Gemini AI, FastAPI, and Chroma for efficient knowledge retrieval, providing context-aware, multi-turn conversations. With features like secure Google OAuth2 authentication, interactive chat sessions, and text-to-speech, it streamlines user support 24/7.
 
 ## Key Features
 
@@ -18,9 +18,9 @@ This tool is an AI-Driven Open Source Support Bot designed to assist users with 
 
 - **Responsive Sidebar**: Enables toggling the chat history sidebar for an uncluttered interface.
 
-## Why Choose the AI-Driven Open Source Support Bot?
+## Why Choose RAGTech Genius?
 
-This tool harnesses advanced AI technology to enhance its support capabilities, continuously evolving through user feedback. It ensures that tech support is responsive, personalized, and adaptable to changing needs. Whether addressing routine queries or tackling complex issues, the bot streamlines the support process for key technologies, delivering accurate, on-demand assistance. Its combination of automation and human expertise guarantees a consistent and reliable user experience.
+RAGTech Genius offers efficient, 24/7 open-source software support using advanced AI and RAG technology. It reduces human workload by answering complex queries, manages multi-turn chats with context-aware responses, and includes features like feedback, text-to-speech, and secure user authentication for an enhanced support experience.
 
 ## Installation Instructions
 

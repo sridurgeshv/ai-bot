@@ -312,7 +312,7 @@ const ChatPage = () => {
   return (
     <div className="chat-container">
       <div className="chat-header">
-        <h1>Self-Learning Tech Support Bot for Open-Source Software</h1>
+        <h1>RAGTech Genius: AI-Powered Open-Source Support Assistant</h1>
         <div
           className="sign-out-container"
           onMouseEnter={() => setShowOptions(true)}

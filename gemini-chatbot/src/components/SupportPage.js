@@ -15,7 +15,7 @@ const SupportPage = () => {
       <section className="support-section introduction">
         <h2 className="support-heading">Introduction</h2>
         <p className="support-text">
-        Our self-learning bot is specifically developed to assist users with comprehensive support for open-source software. By addressing technical queries, offering solutions, and recommending best practices, it ensures efficient problem-solving. Additionally, its adaptive learning capability allows it to continuously enhance its knowledge base, providing increasingly accurate and relevant responses as it evolves.
+        Our AI-Powered Open-Source Support Assistant is specifically developed to assist users with comprehensive support for open-source software. By addressing technical queries, offering solutions, and recommending best practices, it ensures efficient problem-solving. Additionally, its adaptive learning capability allows it to continuously enhance its knowledge base, providing increasingly accurate and relevant responses as it evolves.
         </p>
       </section>
 
