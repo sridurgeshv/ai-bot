@@ -88,4 +88,4 @@ Once both the frontend and backend are running, access the tool by navigating to
 
 ## Video Demo
 
-A [video demonstration](https://www.awesomescreenshot.com/video/31713673?key=ad8472ceee9ef30258cd8508bc374606) is available, showcasing how to use and navigate the Self-Learning Bot. This walkthrough highlights its key features and provides guidance on interacting with the application effectively.
+A [video demonstration](https://www.awesomescreenshot.com/video/31713673?key=ad8472ceee9ef30258cd8508bc374606) is available, showcasing how to use and navigate the RAGTech Genius. This walkthrough highlights its key features and provides guidance on interacting with the application effectively.
