@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import ChatHistorySidebar from './ChatHistorySidebar';
@@ -23,6 +23,42 @@ const ChatPage = () => {
 
   const googleApiKey = sessionStorage.getItem("googleApiKey");
 
+  const fetchChatMessages = useCallback(async (sessionId) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/get_chat_messages/${sessionId}`);
+      setCurrentSession(prevSession => ({
+        ...prevSession,
+        messages: response.data
+      }));
+      setShowWelcome(response.data.length === 0);
+    } catch (error) {
+      console.error("Error fetching chat messages:", error);
+      setError("Failed to fetch chat messages. Please try again.");
+    }
+  }, []);
+
+  const fetchChatSessions = useCallback(async (id) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
+      if (Array.isArray(response.data)) {
+        setChatSessions(response.data);
+        if (response.data.length > 0) {
+          const lastSession = response.data[0];
+          setCurrentSession(lastSession);
+          fetchChatMessages(lastSession.id);
+        } else {
+          setShowWelcome(true);
+        }
+      } else {
+        console.error("Unexpected response format:", response.data);
+        setError("Failed to fetch chat sessions. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error fetching chat sessions:", error);
+      setError("Failed to fetch chat sessions. Please try again.");
+    }
+  }, [fetchChatMessages]);
+
   useEffect(() => {
     const storedGoogleId = sessionStorage.getItem("googleId");
     const storedPreferredName = sessionStorage.getItem("preferredName");
@@ -40,7 +76,7 @@ const ChatPage = () => {
       const userName = sessionStorage.getItem("userName");
       setPreferredName(userName || "");
     }
-  }, [navigate]);
+  }, [navigate, fetchChatSessions]);
 
     useEffect(() => {
       if (!googleApiKey) {
@@ -48,7 +84,7 @@ const ChatPage = () => {
       }
     }, [googleApiKey, navigate]);
 
-    const fetchChatSessions = async (id) => {
+    /*const fetchChatSessions = useCallback(async (id) => {
       try {
         const response = await axios.get(`http://localhost:8000/get_chat_sessions/${id}`);
         if (Array.isArray(response.data)) {
@@ -58,7 +94,6 @@ const ChatPage = () => {
             setCurrentSession(lastSession);
             fetchChatMessages(lastSession.id);
           } else {
-            // If there are no existing sessions, show the welcome message
             setShowWelcome(true);
           }
         } else {
@@ -69,22 +104,21 @@ const ChatPage = () => {
         console.error("Error fetching chat sessions:", error);
         setError("Failed to fetch chat sessions. Please try again.");
       }
-    };
+    }, [fetchChatMessages]);
 
-    const fetchChatMessages = async (sessionId) => {
+    const fetchChatMessages = useCallback(async (sessionId) => {
       try {
         const response = await axios.get(`http://localhost:8000/get_chat_messages/${sessionId}`);
         setCurrentSession(prevSession => ({
           ...prevSession,
           messages: response.data
         }));
-        // Hide welcome message if there are existing messages
         setShowWelcome(response.data.length === 0);
       } catch (error) {
         console.error("Error fetching chat messages:", error);
         setError("Failed to fetch chat messages. Please try again.");
       }
-    };
+    }, []);*/
 
   // Handle text-to-speech for the bot response
   const handleReadAloud = (text) => {
@@ -201,7 +235,7 @@ const ChatPage = () => {
       });
 
       const newUserMessage = { type: 'user', message: query };
-      const newBotMessage = { type: 'bot', message: res.data.answer };
+      const newBotMessage = { type: 'bot', message: formatBotResponse(res.data.answer) };
 
       setCurrentSession(prevSession => ({
         ...prevSession,
@@ -215,7 +249,6 @@ const ChatPage = () => {
 
       setQuery("");
 
-      // Check if the response contains the specific phrase and show escalation prompt
       if (res.data.answer.toLowerCase().includes("the provided context doesn't contain information about")) {
         setShowEscalationPrompt(true);
       }
@@ -265,8 +298,6 @@ const ChatPage = () => {
 
     // Format code blocks with syntax highlighting and remove extra spaces
     response = response.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => `<pre><code class="language-${lang || 'plaintext'}">${code.trim()}</code></pre>`);
-
-    // ... (other formatting remains the same)
 
     return response;
   };
