@@ -21,6 +21,7 @@ from datetime import datetime
 import models
 import logging
 import re
+import html
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -232,6 +233,10 @@ def format_bot_response(response):
     response = re.sub(r'(<li>.*</li>)', r'<ul>\1</ul>', response, flags=re.DOTALL)
 
     return response
+
+def format_code_block(code):
+    code = code.strip().replace(r'^\w+\n', '', 1)  # Remove language identifier if present
+    return f'<pre><code>{html.escape(code)}</code></pre>'
 
 # POST /escalate route that saves the escalation request in the database
 class EscalateRequest(BaseModel):

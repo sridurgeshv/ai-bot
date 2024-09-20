@@ -288,18 +288,47 @@ const ChatPage = () => {
   };
 
   const formatBotResponse = (response) => {
-    // Convert inline code to <code> tags
-    response = response.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-
-    // Convert newlines to <br> tags, except within code blocks
-    response = response.replace(/```([\s\S]*?)```/g, (match) => match.replace(/\n/g, '\uFFFF'));
-    response = response.replace(/\n/g, '<br>');
-    response = response.replace(/\uFFFF/g, '\n');
-
-    // Format code blocks with syntax highlighting and remove extra spaces
-    response = response.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => `<pre><code class="language-${lang || 'plaintext'}">${code.trim()}</code></pre>`);
-
+    // Format code blocks first
+    response = response.replace(/```([\s\S]*?)```/g, (match, code) => {
+      // Trim whitespace and remove language identifier if present
+      code = code.trim().replace(/^\w+\n/, '');
+      return `<pre><code>${escapeHtml(code)}</code></pre>`;
+    });
+  
+    // Format inline code
+    response = response.replace(/`([^`\n]+)`/g, (match, code) => {
+      return `<code>${escapeHtml(code)}</code>`;
+    });
+  
+    // Format command-like lines that aren't already in code blocks
+    response = response.replace(/^(git\s+.*|npm\s+.*|yarn\s+.*)$/gm, (match) => {
+      return `<pre><code>${escapeHtml(match)}</code></pre>`;
+    });
+  
+    // Convert newlines to <br> tags, except within <pre> tags
+    response = response.replace(/<pre>[\s\S]*?<\/pre>|([^\n])\n(?!\n)/g, (match, p1) => {
+      return match.startsWith('<pre>') ? match : `${p1 || ''}<br>`;
+    });
+  
+    // Format lists, bold, italic, etc.
+    response = response
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/^(\s*)-\s+(.+)$/gm, '$1<li>$2</li>')
+      .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+      .replace(/^(\s*)\d+\.\s+(.+)$/gm, '$1<li>$2</li>')
+      .replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
+  
     return response;
+  };
+  
+  const escapeHtml = (unsafe) => {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   };
 
   const handleSignOut = () => {
@@ -371,7 +400,10 @@ const ChatPage = () => {
                         <strong>{chat.type === 'user' ? 'You: ' : 'Bot: '}</strong>
                         {chat.type === 'bot' ? (
                          <>
-                          <div className="bot-message-content" dangerouslySetInnerHTML={{ __html: chat.message }} />
+                          <div 
+                            className="bot-message-content" 
+                            dangerouslySetInnerHTML={{ __html: formatBotResponse(chat.message) }} 
+                          />
                              <div className="message-actions">
                                 <button
                                      onClick={() => handleReadAloud(chat.message)}
