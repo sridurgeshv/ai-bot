@@ -9,6 +9,7 @@ const ChatPage = () => {
   const [query, setQuery] = useState("");
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
+  const [chatHistory, setChatHistory] = useState({});
   const [googleId, setGoogleId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
@@ -29,6 +30,10 @@ const ChatPage = () => {
       setCurrentSession(prevSession => ({
         ...prevSession,
         messages: response.data
+      }));
+      setChatHistory(prevHistory => ({
+        ...prevHistory,
+        [sessionId]: response.data
       }));
       setShowWelcome(response.data.length === 0);
     } catch (error) {
@@ -140,8 +145,12 @@ const ChatPage = () => {
       const newSession = { id: response.data.session_id, title: response.data.title, messages: [] };
       setCurrentSession(newSession);
       setChatSessions(prevSessions => [newSession, ...(prevSessions || [])]);
+      setChatHistory(prevHistory => ({
+        ...prevHistory,
+        [newSession.id]: []
+      }));
       setQuery("");
-      setShowWelcome(true); // Show welcome message for new chat
+      setShowWelcome(true);
     } catch (error) {
       console.error("Error creating new chat session:", error);
       setError(`Failed to create a new chat session. ${error.response?.data?.detail || error.message}`);
@@ -201,10 +210,17 @@ const ChatPage = () => {
       const newUserMessage = { type: 'user', message: query };
       const newBotMessage = { type: 'bot', message: formatBotResponse(res.data.answer) };
 
-      setCurrentSession(prevSession => ({
-        ...prevSession,
-        messages: [...(prevSession.messages || []), newUserMessage, newBotMessage]
-      }));
+      setCurrentSession(prevSession => {
+        const updatedMessages = [...(prevSession.messages || []), newUserMessage, newBotMessage];
+        setChatHistory(prevHistory => ({
+          ...prevHistory,
+          [prevSession.id]: updatedMessages
+        }));
+        return {
+          ...prevSession,
+          messages: updatedMessages
+        };
+      });
 
       if (currentSession.title === "New Chat") {
         const newTitle = await generateSessionTitle(query);

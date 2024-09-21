@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
+from datetime import datetime
 
 class Escalation(Base):
     __tablename__ = "escalations"
@@ -31,8 +32,10 @@ class ChatMessage(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("chat_sessions.id"))
-    message_type = Column(String)  # 'user' or 'bot'
-    message = Column(Text)
+    message_type = Column(String)
+    message = Column(String)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
     session = relationship("ChatSession", back_populates="messages")
 
 class Feedback(Base):

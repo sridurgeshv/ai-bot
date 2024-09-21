@@ -12,3 +12,4 @@ rapidocr-onnxruntime
 fastapi
 uvicorn 
 google-auth-oauthlib
+alembic

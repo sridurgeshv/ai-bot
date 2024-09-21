@@ -140,7 +140,7 @@ def get_vectorstore(api_key: str):
     return vectorstore
 
 system_prompt = (
-    "You are a technical support assistant specializing in diagnosing and resolving issues related to widely-used open-source software."
+    "You are an expert technical support specialist focused on diagnosing and resolving issues related to popular open-source software. Your goal is to deliver clear, and actionable guidance, ensuring users quickly overcome their technical challenges."
     "Use the following pieces of retrieved context to provide solutions or guidance to the user. "
     "If you don't know the answer based on the provided context, say the provided context doesn't contain information about issue. "
     "Keep your answers clear and concise with required explanations."
@@ -158,6 +158,15 @@ prompt = ChatPromptTemplate.from_messages(
 @app.post("/chat")
 async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
     try:
+        # Get the conversation history for the current session
+        history = db.query(ChatMessage).filter(ChatMessage.session_id == request.sessionId).order_by(ChatMessage.timestamp).all()
+        
+        # Construct the conversation context
+        context = "\n".join([f"{msg.message_type.capitalize()}: {msg.message}" for msg in history[-5:]])  # Include last 5 messages
+        
+        # Prepare the prompt with the conversation history
+        full_prompt = f"{context}\nHuman: {request.question}\nAI:"
+
         # Initialize or get the vectorstore using the provided API key
         vectorstore = get_vectorstore(request.apiKey)
         retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10})
@@ -167,7 +176,7 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
         question_answer_chain = create_stuff_documents_chain(llm, prompt)
         rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 
-        response = rag_chain.invoke({"input": request.question})
+        response = rag_chain.invoke({"input": full_prompt})
         answer = response["answer"]
 
         # Save the user message
@@ -177,7 +186,6 @@ async def chat_with_model(request: ChatRequest, db: Session = Depends(get_db)):
             message=request.question
         )
         db.add(user_message)
-        db.commit()
 
         # Format the answer
         formatted_answer = format_bot_response(answer)
