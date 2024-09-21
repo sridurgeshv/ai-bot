@@ -50,32 +50,33 @@ npm start
 
 ### Backend Setup
 
-1.Navigate to the backend directory in another terminal.
+1. Navigate to the backend directory in another terminal.
 
 ```bash
-cd gemini feedback
+ cd gemini feedback
  ```
 
-2.Create and activate a virtual environment:
+2. Create and activate a virtual environment:
 
 ```bash
-python -m venv venv
-.\venv\Scripts\activate
+ python -m venv venv
+ .\venv\Scripts\activate
 ```
 
-3.Install the required Dependencies:
+3. Install the required Dependencies:
 
 ```bash
-pip install -r requirements.txt
+ pip install -r requirements.txt
 ```
 
-4.Start the backend server:
+4. Start the backend server:
 
 ```bash
-uvicorn main:app --reload
+ uvicorn main:app --reload
 ```
 
 ### Database Initialization and Migration
+
 After setting up the backend:
 
 1. Initialize the database:
@@ -89,10 +90,10 @@ python init_db.py
 alembic upgrade head
 ```
 
-If you encounter any issues with existing migrations, you can reset the migration process:
-a. Backup your database (if it contains important data).
-b. Delete all files in the `alembic/versions/` directory.
-c. Create a new initial migration:
+If you encounter any issues with existing migrations, you can reset the migration process: \
+a. Backup your database (if it contains important data). \
+b. Delete all files in the `alembic/versions/` directory. \
+c. Create a new initial migration: 
 ```bash
 alembic revision --autogenerate -m "Initial migration"
 ```
