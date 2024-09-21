@@ -35,57 +35,78 @@ git clone https://github.com/sridurgeshv/ai-bot.git
 
 ### Frontend Setup
 1. Navigate to the frontend directory in your terminal
-   ```bash
-    cd gemini-chatbot
-   ```
+```bash
+cd gemini-chatbot
+```
 
 2. Install the required dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 3. Start the frontend application:
-   ```bash
-   npm start
-   ```
+```bash
+npm start
+```
 
 ### Backend Setup
 
-### 1.Navigate to the backend directory in another terminal.
+1.Navigate to the backend directory in another terminal.
 
 ```bash
 cd gemini feedback
  ```
 
-### 2.Create and activate a virtual environment:
+2.Create and activate a virtual environment:
 
 ```bash
 python -m venv venv
 .\venv\Scripts\activate
 ```
 
-### 3.Install the required Dependencies:
+3.Install the required Dependencies:
 
 ```bash
- pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
-### 4.Start the backend server:
+4.Start the backend server:
 
 ```bash
- uvicorn main:app --reload
+uvicorn main:app --reload
 ```
 
-### Database Initialization
+### Database Initialization and Migration
+After setting up the backend:
 
-- To set up the database:
+1. Initialize the database:
 
 ```bash
- python init_db.py
+python init_db.py
 ```
+
+2. Run database migrations:
+```bash
+alembic upgrade head
+```
+
+If you encounter any issues with existing migrations, you can reset the migration process:
+a. Backup your database (if it contains important data).
+b. Delete all files in the `alembic/versions/` directory.
+c. Create a new initial migration:
+```bash
+alembic revision --autogenerate -m "Initial migration"
+```
+d. Apply the new migration:
+```bash
+alembic upgrade head
+```
+
+These steps ensure your database schema is up-to-date with the latest models.
+
 ## View the Application
 
 Once both the frontend and backend are running, access the tool by navigating to `http://localhost:3000` in your browser.
 
 ## Video Demo
 
-A [video demonstration](https://www.awesomescreenshot.com/video/31713673?key=ad8472ceee9ef30258cd8508bc374606) is available, showcasing how to use and navigate the RAGTech Genius. This walkthrough highlights its key features and provides guidance on interacting with the application effectively.
+A [video demonstration](https://www.youtube.com/watch?v=Z67BFCcK6II) is available, showcasing how to use and navigate the RAGTech Genius. This walkthrough highlights its key features and provides guidance on interacting with the application effectively.
